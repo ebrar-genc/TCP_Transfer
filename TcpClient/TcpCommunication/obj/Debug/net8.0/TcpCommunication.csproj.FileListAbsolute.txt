@@ -1,0 +1,14 @@
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\TcpCommunication.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\TcpCommunication.AssemblyInfoInputs.cache
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\TcpCommunication.AssemblyInfo.cs
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\TcpCommunication.csproj.CoreCompileInputs.cache
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\bin\Debug\net8.0\TcpCommunication.exe
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\bin\Debug\net8.0\TcpCommunication.deps.json
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\bin\Debug\net8.0\TcpCommunication.runtimeconfig.json
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\bin\Debug\net8.0\TcpCommunication.dll
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\bin\Debug\net8.0\TcpCommunication.pdb
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\TcpCommunication.dll
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\refint\TcpCommunication.dll
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\TcpCommunication.pdb
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\TcpCommunication.genruntimeconfig.cache
+C:\Users\ebrar\Desktop\TcpCommunication\TcpCommunication\obj\Debug\net8.0\ref\TcpCommunication.dll
