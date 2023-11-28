@@ -5,57 +5,130 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
-namespace TcpCommunication
+
+/// <summary>
+/// Represents a TCP client for communication with a server.
+/// </summary>
+class TcpDataTransfer
 {
+    private TcpClient client;
+    private string ipAddress;
+    private int port;
+
+    #region Constructor
+
     /// <summary>
-    /// Represents a TCP client for communication with a server.
+    /// Initializes and set parameters.
     /// </summary>
-    internal class Tcp_Client
+    /// <param name="ipAddress">The IP address of the server.</param>
+    /// <param name="port">The port number to connect.</param> 
+    public TcpDataTransfer(string ipAddress, int port)
     {
-        private TcpClient client;
-        private string ipAddress;
-        private int port;
+        this.ipAddress = ipAddress;
+        this.port = port;
+        this.client = new TcpClient();
+        Connect();
+    }
+    #endregion
 
-        #region Constructor
-
-        /// <summary>
-        /// Initializes and set parameers.
-        /// </summary>
-        /// <param name="ipAddress">The IP address of the server.</param>
-        /// <param name="port">The port number to connect.</param> 
-        public Tcp_Client(string ipAddress, int port)
+    #region Connection
+    /// <summary>
+    /// Connects to the server.
+    /// </summary>
+    public void Connect()
+    {
+        try
         {
-            this.ipAddress = ipAddress;
-            this.port = port;
-            Debug.WriteLine("Hello Client Constructor");
-            this.client = new TcpClient();
-            Connect();
+            client.Connect(ipAddress, port);
         }
-        #endregion
-
-        #region Connection - Disconnection Methods
-        /// <summary>
-        /// Connects to the server.
-        /// </summary>
-        public void Connect()
+        catch (Exception ex)
         {
-            try
-            {
-                client.Connect(ipAddress, port);
-                Debug.WriteLine("Connected to the server.");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Error connecting to the server: " + ex.Message);
-            }
+            Debug.WriteLine("Error connecting to the server: " + ex.Message);
         }
+    }
 
-        /// <summary>
-        /// Disconnects from the server and releases resources.
-        /// </summary>
-        public void Disconnect()
+    #endregion
+
+    #region Data Transfer
+
+
+    /// <summary>
+    /// The requested string is converted into byte array and sent to the server via TCP connection.
+    /// </summary>
+    /// <param name="flag">Determine whether it is string or file path</param>
+    /// <param name="data">The data to be sent.</param>
+    public void SendString(string str)
+    {
+        Debug.WriteLine(str);
+        NetworkStream stream = client.GetStream();
+
+        // Translate the passed message into ASCII and store it as a !!!! Byte array!!!
+        byte[] strData = Encoding.ASCII.GetBytes(str);
+
+        // send string
+        stream.Write(strData, 0, strData.Length);
+        ReadResponse(stream);
+    }
+
+    /// send file with filezstream
+    public void SendFile(string filePath)
+    {
+        Debug.WriteLine(filePath);
+        NetworkStream stream = client.GetStream();
+
+        using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
         {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            // read file and send file
+            while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                stream.Write(buffer, 0, bytesRead);
+            }
+
+            Console.WriteLine($"Dosya gönderildi: {filePath}");
+        }
+        ReadResponse(stream);
+    }
+
+
+    #endregion
+
+    #region 
+    /// <summary>
+    /// Reads the server's response.
+    /// </summary>
+    /// <param name="stream">The NetworkStream used for reading.</param>
+    private void ReadResponse(NetworkStream stream)
+    {
+            Debug.WriteLine("444");
+            byte[] responseData = new byte[4096];
+            Debug.WriteLine("555");
+
+            int bytesRead = stream.Read(responseData, 0, responseData.Length);
+            Debug.WriteLine("664");
+
+
+            string response = Encoding.ASCII.GetString(responseData, 0, bytesRead);
+            Debug.WriteLine("7777");
+
+            Debug.WriteLine("Server Response: " + response);
+            //Disconnect();
+    }
+
+    #endregion
+
+
+
+    #region Disconnect
+    /// <summary>
+    /// Disconnects from the server and releases resources.
+    /// </summary>
+    private void Disconnect()
+    {
             if (client != null)
             {
                 client.Close();
@@ -66,72 +139,21 @@ namespace TcpCommunication
             {
                 Console.WriteLine("TcpClient is already null.");
             }
-        }
-
-        #endregion
-
-        #region Data Transfer Methods
-
-
-        /// <summary>
-        /// The requested data is converted into byte array and sent to the server via TCP connection.
-        /// </summary>
-        /// <param name="flag">Determine whether it is string or file path</param>
-        /// <param name="data">The data to be sent.</param>
-        public void SendData(char flag, string data)
-        {
-            Debug.WriteLine("Hello, SendData()!");
-
-            // Get a client stream for reading and writing.
-            NetworkStream stream = client.GetStream();
-
-            if (flag == 's')
-            {
-                Debug.WriteLine("Hello string!");
-                // Translate the passed message into ASCII and store it as a Byte array!!!
-                byte[] strData = Encoding.ASCII.GetBytes(data);
-
-                stream.Write(strData, 0, strData.Length);
-                Console.WriteLine("Sent message: " + data);
-                ReadResponse(stream);
-            }
-            else
-            {
-                //allow file ******
-                // read the file and send
-                byte[] fileData = File.ReadAllBytes(data);
-                stream.Write(fileData, 0, fileData.Length);
-                Console.WriteLine("Sent file path: " + data);
-                ReadResponse(stream);
-            }
-
-        }
-
-
-        /// <summary>
-        /// Reads the server's response.
-        /// </summary>
-        /// <param name="stream">The NetworkStream used for reading.</param>
-        public void ReadResponse(NetworkStream stream)
-        {
-
-            byte[] responseData = new byte[4096];
-            int bytesRead = stream.Read(responseData, 0, responseData.Length);
-            Console.WriteLine("geldi miii:");
-
-
-            string response = Encoding.ASCII.GetString(responseData, 0, bytesRead);
-
-            Console.WriteLine("Server Response: " + response);
-            Console.WriteLine("geldiiiiiiiiii: " + response);
-
-            Console.ReadLine();
-        }
-
-        #endregion
-
     }
+
+    #endregion
+
+ 
 }
+
+
+
+
+
+
+
+
+
 
 
 /*
@@ -152,4 +174,22 @@ namespace TcpCommunication
                  Console.WriteLine("Not a valid file path. Press Enter to exit...");
              }
             }*/
-*/
+
+
+
+
+
+
+
+//classlar başka classtan inerit olabilir start connect vs aynı
+
+
+
+
+
+
+
+
+
+
+

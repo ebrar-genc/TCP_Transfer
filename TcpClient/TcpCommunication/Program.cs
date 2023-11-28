@@ -10,82 +10,109 @@ using System.Security;
 
 namespace TcpCommunication
 {
-    /// <summary>
-    /// Entry point for the TCP client application.
-    /// </summary>
-    internal class Program
+    class Program
     {
+        #region Main
+
+        /// <summary>
+        /// Entry point for the TCP client application.
+        /// </summary>
         static void Main()
         {
-            char flag;
-            string num;
-            string data;
 
-            Console.WriteLine("Please select what you want to send to the server.\r\n1: string\r\n2: file");
-            num = Console.ReadLine();
-            InputIsNullOrEmpty(num);
+            Console.WriteLine("Enter string to send message to server or paste the path for file transfer..");
+            string data = Console.ReadLine();
 
-            // create loop ***
+            TcpDataTransfer client = new TcpDataTransfer("127.0.0.1", 3001);
 
-            /// set parameters
-            if (num == "1")
+            if (IsPath(data))
             {
-                data = GetData("string");
-                InputIsNullOrEmpty(data);
-                flag = 's';
-
-            }
-            else if (num == "2")
-            {
-                data = GetData("file path");
-                InputIsNullOrEmpty(data);
-                flag = 'd';
-
+                Console.WriteLine("Starting file transfer...");
+                try
+                {
+                    client.SendFile(data);
+                    data = Console.ReadLine();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                }
             }
             else
             {
-                Console.WriteLine("You made an invalid keystroke. Press Enter to exit...");
-                Console.ReadLine();
-                return;
+                try
+                {
+                    client.SendString(data);
+                    data = Console.ReadLine();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                }
             }
-            // create a loop *****
-           
-            Tcp_Client client = new Tcp_Client("127.0.0.1", 3001);
+
+            Console.WriteLine("The program is over. Press enter to exit");
+            Console.ReadLine();
+        }
+        #endregion
+
+        #region File Path Control
+        /// <summary>
+        /// Valid File path and File found -> IsValidFileExtension(data);
+        /// </summary>
+        static bool IsPath(string data)
+        {
             try
             {
-                // dont have a return value. Is there a need for a try-catch structure? *****
-                client.SendData(flag, data);
+                if (Path.IsPathRooted(data))
+                {
+                    if (File.Exists(data))
+                    {
+                        if (IsValidFileExtension(data))
+                            return true;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
             }
-          
-            static void InputIsNullOrEmpty(string data)
+            return false;
+        }
+
+        static bool IsValidFileExtension(string data)
+        {
+            string[] allowedExtensions = { ".txt", ".jpg", ".png", ".pdf", ".zip" };
+
+            string fileExtension = Path.GetExtension(data);
+
+            foreach (string allowedExtension in allowedExtensions)
             {
-                if (string.IsNullOrEmpty(data))
+                if (string.Equals(fileExtension, allowedExtension, StringComparison.OrdinalIgnoreCase))
                 {
-                    // ask for try again or return *****
-                    Console.WriteLine("You made an invalid data. Press Enter to exit...");
-                    Console.ReadLine();
-                    return;
+                    return true;
                 }
             }
 
-            static string GetData(string content)
-            {
-                Console.WriteLine("Enter the {0} you want to send to the server.", content);
-                string data = Console.ReadLine();
-                InputIsNullOrEmpty(data);
-                return data;
-            }
+            return false;
         }
+        #endregion
 
-        
     }
 }
+
+
+
+
+
+
+
 
 /*
  * Determine which client you are************> create class 
  * 
 */
+
+
+//classları ayırdım
+//string de olsssnn dıye

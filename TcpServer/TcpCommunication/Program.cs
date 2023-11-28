@@ -24,6 +24,8 @@ namespace TcpCommunication
             {
                 server.Stop();
             }
+            Console.WriteLine("The program is over. Press enter to exit");
+            Console.ReadLine();
         }
     }
 }

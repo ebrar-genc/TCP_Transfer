@@ -34,7 +34,7 @@ class Tcp_Server
 
     #endregion
 
-    #region Methods
+    #region Start
 
     /// <summary>
     /// Starts the server and listens for client connections.
@@ -42,85 +42,92 @@ class Tcp_Server
     public void Start()
     {
         this.isRunning = true;
-        tcpListener.Start();//********
-
+        NetworkStream stream;
+        tcpListener.Start();
+        int i = 0;
         Console.WriteLine("Server is listening on " + ipAddress + ":" + port);
 
         while (this.isRunning)
         {
-            TcpClient client = tcpListener.AcceptTcpClient();
-            Console.WriteLine("Client connected!");
-            Console.ReadLine();
-
+            TcpClient client = tcpListener.AcceptTcpClient(); //blocking
+            stream = client.GetStream();
+            Console.WriteLine("Client connected!" + i);
+            i++;
             // Process client request
-            ProcessInput(client);
-            client.Close();
+            ProcessInput(stream);
+            
         }
     }
+
+    #endregion
+
+    #region Process
 
     /// <summary>
     /// Processes the input received from the client.
     /// </summary>
-    private void ProcessInput(TcpClient client)
+    static private void ProcessInput(NetworkStream stream)
     {
-        NetworkStream stream = client.GetStream();
-        byte[] requestBuffer = new byte[4096];
-        int bytesRead = stream.Read(requestBuffer, 0, requestBuffer.Length);
-        string request = Encoding.ASCII.GetString(requestBuffer, 0, bytesRead);
-        Console.WriteLine("Received request: " + request);
-        SendResponse(stream, "File path received successfully!");
+        /*// Read the header to determine the type of data
+         byte[] headerBytes = new byte[sizeof(bool)];
+         stream.Read(headerBytes, 0, headerBytes.Length);
+         bool isFile = BitConverter.ToBoolean(headerBytes, 0);
 
-        // PERFORM STRING OR FILE ACCORDING TO READBYTEA *****
-        Console.ReadLine();
-        //checks if file path valid && exist->even though there is a file path, if that file does not physically exist or does not have read permissions
-        if (!Path.IsPathRooted(request) && !File.Exists(request))
-        {
-            SendResponse(stream, "Valid file path received successfully!");
-            try
-            {
-                Console.WriteLine("Press Enter to read the file content.");
-                Console.ReadLine();
+         if (isFile)
+         {
+             // If it's a file, read the file content
+             byte[] fileContent = new byte[4096];
+             int bytesRead = stream.Read(fileContent, 0, fileContent.Length);
+             Console.WriteLine("FFFİLE");
+             // Process file content...
+         }
+         else
+         {
+             // If it's a string, read the string
+             byte[] stringData = new byte[4096];
+             int bytesRead = stream.Read(stringData, 0, stringData.Length);
+             string receivedString = Encoding.UTF8.GetString(stringData, 0, bytesRead);
+             Console.WriteLine("sstrrng");
 
-                // read a file content
-                string fileContent = File.ReadAllText(request);
-                Console.WriteLine("File Content: " + fileContent);
+             // Process string...
+         }*/
+        byte[] stringData = new byte[4096];
+        int bytesRead = stream.Read(stringData, 0, stringData.Length);
+        string response = Encoding.UTF8.GetString(stringData, 0, bytesRead);
+        SendResponse(stream, response);
+    }
 
-                
-            }
-            Console.WriteLine("Press Enter to continue.");
-            Console.ReadLine();
 
 
-        }
-        else
-        {
-            Console.WriteLine("Invalid path. Press Enter to exit...");
-            Console.ReadLine();
-            Stop();
-        }
+    /// <summary>
+    /// Sends a response to the client through stream.
+    /// </summary>
+    static public void SendResponse(NetworkStream stream, string response)
+    {
+        byte[] responseBytes = Encoding.ASCII.GetBytes(response);
+        stream.Write(responseBytes, 0, responseBytes.Length);
+    }
 
-        /// <summary>
-        /// Sends a response to the client through stream.
-        /// </summary>
-        private void SendResponse(NetworkStream stream, string response)
-        {
-            byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-            stream.Write(responseBytes, 0, responseBytes.Length);
-        }
+    #endregion
 
-        /// <summary>
-        /// Stops the server.
-        /// </summary>
-        public void Stop()
-        {
-            this.isRunning = false;
-            this.tcpListener.Stop();
-        }
+    #region Stop
 
-        #endregion
+    /// <summary>
+    /// Stops the server.
+    /// </summary>
+    public void Stop()
+    {
+        this.isRunning = false;
+        this.tcpListener.Stop(); //client beklemeyi durdurur
+        tcpListener = null;
+    }
 
-    /*
-     * Capture client request with 
-     * handle multiple client connections
-     * await ListenForClientsAsync()---->search it
-     */
+    #endregion
+}
+
+
+/*
+ * Capture client request with 
+ * handle multiple client connections
+ * await ListenForClientsAsync()---->search it
+ */
