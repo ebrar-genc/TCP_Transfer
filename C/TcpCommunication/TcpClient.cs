@@ -28,7 +28,6 @@ class TcpDataTransfer
     {
         this.ipAddress = ipAddress;
         this.port = port;
-        Connect();
     }
     #endregion
 
@@ -65,15 +64,15 @@ class TcpDataTransfer
 
         try
         {
-            NetworkStream stream = client.GetStream();//usinGGGG
+            using (NetworkStream stream = client.GetStream())
+            {
+                // Translate the passed message into ASCII and store it as a !!!! Byte array!!!
+                byte[] strData = Encoding.ASCII.GetBytes(str);
 
-            // Translate the passed message into ASCII and store it as a !!!! Byte array!!!
-            byte[] strData = Encoding.ASCII.GetBytes(str);
-
-            // send string
-            stream.Write(strData, 0, strData.Length);
-            Debug.WriteLine("Sent!!");
-            ReadResponse(stream, -1);
+                // send string
+                stream.Write(strData, 0, strData.Length);
+                ReadResponse(stream, -1);
+            }
         }
         catch (Exception ex) 
         {
@@ -89,14 +88,16 @@ class TcpDataTransfer
         try
         {
             NetworkStream stream = client.GetStream();
+            string header = "dataType: file\n";
             byte[] fileData = File.ReadAllBytes(filePath);
-            string header = "dataType: file";
             byte[] headerBytes = Encoding.ASCII.GetBytes(header);
-            byte[] dataToSend = new byte[headerBytes.Length + filePath.Length];
+            byte[] dataToSend = new byte[headerBytes.Length + fileData.Length];
+
+            //dataToSend content is created appropriately
             headerBytes.CopyTo(dataToSend, 0);
             fileData.CopyTo(dataToSend, headerBytes.Length);
+            // SEND MORE OPTIMIZED WITH BUFFER
             stream.Write(dataToSend, 0, dataToSend.Length);
-            Debug.WriteLine("Sent!!!");
             ReadResponse(stream, fileData.Length);
         }
         catch (Exception ex)
@@ -133,13 +134,12 @@ class TcpDataTransfer
 
                 while (totalBytesRead < dataLength)
                 {
-                    Debug.WriteLine("ssssssssssssss");
                     int bytesToRead = Math.Min(1024, dataLength - totalBytesRead);
                     int bytesReadFromFile = stream.Read(fileBuffer, totalBytesRead, bytesToRead);
                     totalBytesRead += bytesReadFromFile;
                     if (bytesReadFromFile == 0)
                     {
-                        // Eğer bytesReadFromFile 0 ise, veri yok demektir ve döngüden çıkabiliriz.
+                        // there is no data and we can exit the loop.
                         break;
                     }
                 }
@@ -151,10 +151,7 @@ class TcpDataTransfer
                 int bytesRead = stream.Read(responseData, 0, responseData.Length);
                 response = Encoding.ASCII.GetString(responseData, 0, bytesRead);
             }
-            Debug.WriteLine("5555555555");
-
-            Debug.WriteLine("Server Response: " + response);
-            //Disconnect();
+            Console.WriteLine("Sent!!!...Server Response: " + response);
         }
         catch (Exception ex)
         {
@@ -168,77 +165,22 @@ class TcpDataTransfer
     /// <summary>
     /// Disconnects from the server and releases resources.
     /// </summary>
-    private void Disconnect()
+    public void Disconnect()
     {
-            if (client != null)
-            {
-                try
-                {
-                    client.Close();
-                    client.Dispose();
-                    Console.WriteLine("Disconnected from the server.");
-                    client = null;
-                }
-                catch (Exception ex)
-            {
-                    Console.WriteLine("An error occurred while disconnecting" + ex.Message);
-                }
-
-            }
-            else
-            {
-                Console.WriteLine("TcpClient is already null.");
-            }
+        try
+        {
+            client.Close();
+            client.Dispose();
+            Console.WriteLine("Disconnected from the server.");
+            client = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while disconnecting" + ex.Message);
+        }
     }
 
     #endregion
  
 }
-
-
-
-
-
-
-
-
-
-
-
-/*
- * public event EventHandler<string> DataReceived ----> search it
- * task, async --> search it
-*/
-
-
-/*
- * /*if (Path.IsPathRooted(request))
-            {
-             if (File.Exists(request))
-             {
-
-             }
-             else
-             {
-                 Console.WriteLine("Not a valid file path. Press Enter to exit...");
-             }
-            }*/
-
-
-
-
-
-
-
-//classlar başka classtan inerit olabilir start connect vs aynı
-
-
-
-
-
-
-
-
-
-
 

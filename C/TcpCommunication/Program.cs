@@ -19,44 +19,31 @@ namespace TcpCommunication
         /// </summary>
         static void Main()
         {
-
-            Console.WriteLine("Enter string to send message to server or paste the path for file transfer..");
-            string data = Console.ReadLine();
-
+            Console.WriteLine("Enter string to send message to server or paste the path for file transfer...");
             TcpDataTransfer client = new TcpDataTransfer("127.0.0.1", 3001);
 
-            if (IsPath(data))
+            while (true)
             {
-                Console.WriteLine("Starting file transfer...");
-                try
-                {
-                    client.SendFile(data);
-                    data = Console.ReadLine();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                }
-            }
-            else
-            {
-                try
-                {
-                    client.SendString(data);
-                    data = Console.ReadLine();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                }
-            }
+                string data = Console.ReadLine();
 
-            Console.WriteLine("The program is over. Press enter to exit");
-            Console.ReadLine();
+                if (data == "q")
+                    break;
+                try
+                {
+                    client.Connect();
+                    InputCheckAndSend(data, client);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                }
+            }
+            client.Disconnect();
         }
         #endregion
 
-        #region File Path Control
+        #region Check and send input
+
         /// <summary>
         /// Valid File path and File found -> IsValidFileExtension(data);
         /// </summary>
@@ -96,6 +83,32 @@ namespace TcpCommunication
 
             return false;
         }
+
+        /// <summary>
+        /// Check whether it is string or file
+        /// </summary>
+        static void InputCheckAndSend(string data, TcpDataTransfer client)
+        {
+            try
+            {
+                if (IsPath(data))
+                {
+                    Console.WriteLine("Starting file transfer...");
+                    client.SendFile(data);
+                }
+                else
+                {
+                    Console.WriteLine("Sending string...");
+                    client.SendString(data);
+                }
+                Console.WriteLine("Sent!!!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+        }
+
         #endregion
 
     }

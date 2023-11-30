@@ -11,13 +11,11 @@ using System.Text;
 /// </summary>
 class Tcp_Server
 {
-    private TcpListener tcpListener;///uPPERCASE
-    private TcpClient Client;
-    private Thread listenerThread;
+    private TcpListener TcpListener;
 
-    private string ipAddress;
-    private int port;
-    private bool isRunning;
+    private string IpAddress;
+    private int Port;
+    int Fd;
 
     #region Constructors
 
@@ -28,10 +26,10 @@ class Tcp_Server
     /// <param name="port">The port number to listen on.</param>
     public Tcp_Server(string ipAddress, int port)
     {
-        this.ipAddress = ipAddress;
-        this.port = port;
-        this.isRunning = false;
-        Debug.WriteLine("Hello Server Constructor");
+        IpAddress = ipAddress;
+        Port = port;
+        Fd = 0;
+        IsRunning = false;
     }
 
     #endregion
@@ -41,110 +39,84 @@ class Tcp_Server
     /// <summary>
     /// Starts the server and listens for client connections.
     /// </summary>
-    public void Start()
+    public async void Start()
     {
-        try
+        this.IsRunning = true;
+
+        // TcpListener initialization
+        using (TcpListener = new TcpListener(IPAddress.Parse(IpAddress), Port))
         {
-            this.isRunning = true;//***
-            tcpListener = new TcpListener(IPAddress.Parse(ipAddress), port);
-            listenerThread = new Thread(new ThreadStart(ListenForClients));
-            listenerThread.Start();
-            Console.WriteLine("Server is listening on " + ipAddress + ":" + port);
-          
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine("An error occurred while starting the server: " + ex.Message);
-        }
-
-    }
-
-    private void ListenForClients()
-    {
-        tcpListener.Start();
-        int i = 1;
-        while (true)
-        {
-            // Listen to client connections
-            Client = tcpListener.AcceptTcpClient(); //blocking mode
-            Console.WriteLine("Client connected! " + i);
-            i++;
-
-            // Create a new thread and process the connection
-            Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
-            clientThread.Start(Client);
-        }
-    }
-
-    private void HandleClientComm(object clientObj)
-    {
-        TcpClient client = (TcpClient)clientObj;
-        NetworkStream stream = client.GetStream();
-
-        ProcessInput(client, stream);/////optimize
-        stream.Close();
-        client.Close();
-    }
-
-        #endregion
-
-        #region Process
-
-        /// <summary>
-        /// Processes the input received from the client.
-        /// </summary>
-        private void ProcessInput(TcpClient client, NetworkStream stream)
-    {
-        try
-        {
-            byte[] data = new byte[1024]; //make specific****
-            int bytesRead = stream.Read(data, 0, data.Length);
-            string message = Encoding.ASCII.GetString(data, 0, bytesRead);
-            if (IsFileHeader(message))
+            try
             {
-                // Extract file name from file header
-                string[] headerParts = message.Split(';');
-                string fileName = headerParts[0];
-                int dataLength = int.Parse(headerParts[1]);
+                TcpListener.Start();
+                Console.WriteLine("Server is listening on " + IpAddress + ":" + Port);
 
-                Debug.WriteLine($"Gelen dosya: {fileName}, Boyut: {dataLength} byte");
-
-                string savePath = Path.Combine("C:\\Users\\ebrar\\Desktop\\S", fileName); // Dizini değiştirin
-
-                using (FileStream fileStream = File.Create(savePath))
+                while (true)
                 {
-                    byte[] fileBuffer = new byte[1024];
-                    int totalBytesRead = 0;
-
-                    while (totalBytesRead < dataLength)
+                    using (TcpClient client = await TcpListener.AcceptTcpClientAsync())
                     {
-                        int bytesToRead = Math.Min(1024, dataLength - totalBytesRead);
-                        int bytesReadFromFile = stream.Read(fileBuffer, 0, bytesToRead);
-                        fileStream.Write(fileBuffer, 0, bytesReadFromFile);
-                        totalBytesRead += bytesReadFromFile;
+                        Console.WriteLine(++Fd + ". client is connected! ");
+                        ProcessInput(client);
                     }
-
-                    Debug.WriteLine("Dosya başarıyla alındı ve kopyalandı.");
                 }
             }
-            else
+            catch (Exception ex)
             {
-
+                Debug.WriteLine("An error occurred while starting the server: " + ex.Message);
             }
-
-            SendResponse(stream, message);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"An error occurred while trying to read the incoming value. Message: {ex.Message}, Stack Trace: {ex.StackTrace}");
         }
     }
+    #endregion
+
+    #region Process
+
+    /// <summary>
+    /// Processes the input received from the client.
+    /// </summary>
+    private void ProcessInput(TcpClient client)
+    {
+        using NetworkStream stream = client.GetStream();
+        {
+            try
+            {
+                byte[] data = new byte[1024]; //make specific****
+                int bytesRead = stream.Read(data, 0, data.Length);
+                string message = Encoding.ASCII.GetString(data, 0, bytesRead);
+                if (IsFileHeader(message))
+                {
+                    message = FileProcess(message, stream); 
+                }
+                Console.WriteLine(message);
+                SendResponse(stream, message);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"An error occurred while trying to read the incoming value. Message: {ex.Message}, Stack Trace: {ex.StackTrace}");
+            }
+        }
+    }
+
+    private string FileProcess(string message, NetworkStream stream)
+    {
+        // Extract file name from file header
+        string[] messageParts = message.Split(" file\n");
+        int dataLength = messageParts[1].Length;
+        byte[] messageData = Encoding.ASCII.GetBytes(messageParts[1]);
+
+        string savePath = Path.Combine("C:\\Users\\ebrar\\Desktop\\S\\ReceivedFiles", Fd.ToString() + ".txt");
+
+        // Write the file content to the specified file path
+        File.WriteAllBytes(savePath, messageData);
+        Debug.WriteLine("Dosya başarıyla alındı ve kopyalandı.");
+       
+        return message;
+    }
+
 
     private bool IsFileHeader(string data)
     {
-        string headerPattern = "dataType: file";
-
-        return data.Contains(headerPattern, StringComparison.OrdinalIgnoreCase);
+        string headerPattern = "dataType: file\n";
+        return data.Contains(headerPattern);
     }
 
 
@@ -168,14 +140,7 @@ class Tcp_Server
     {
         try
         {
-            tcpListener?.Stop();
-
-            // Client nesnesini doğru bir şekilde kapat
-            if (Client != null)
-            {
-                Client.GetStream()?.Close();
-                Client.Close();
-            }
+            TcpListener?.Stop();
         }
         catch (Exception ex)
         {
@@ -185,10 +150,3 @@ class Tcp_Server
 
     #endregion
 }
-
-
-/*
- * Capture client request with 
- * handle multiple client connections
- * await ListenForClientsAsync()---->search it
- */

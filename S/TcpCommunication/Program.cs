@@ -10,7 +10,6 @@ namespace TcpCommunication
     {   
         static void Main()
         {
-            Debug.WriteLine("Hello Server Main!");
             Tcp_Server server = new Tcp_Server("127.0.0.1", 3001);
             try
             {
