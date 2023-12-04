@@ -10,38 +10,36 @@ using System.Runtime.CompilerServices;
 
 class InputCheckAndSend
 {
+    #region Parameters;
+
+    TcpDataTransfer Client;
+    #endregion
+
     #region Public
 
-    public InputCheckAndSend()
+    /// <summary>
+    /// Initializes a new instance.
+    /// </summary>
+    public InputCheckAndSend(TcpDataTransfer client)
     {
+        Client = client;
     }
     #endregion
 
     #region Public Function
 
     /// <summary>
-    /// Check whether it is string or file
+    /// Check whether it is string or file and call CreateHeader() function to prepare header.
     /// </summary>
-    public void IsPath(string input, TcpDataTransfer client)
+    /// <param name="input">The input string or file path.</param>
+    public void IsPath(string input)
     {
         try
         {
-            if (Path.IsPathRooted(input))
-            {
-                if (File.Exists(input))
-                {
-                    if (IsValidFileExtension(input))
-                    {
-                        Console.WriteLine("Starting file transfer...");
-                        client.SendFile(input);
-                    }
-                }
-            }
+            if(IsValidPath(input))
+                CreateHeader(input, "file");       
             else
-            {
-                Console.WriteLine("Sending string...");
-                client.SendString(input);
-            }
+                CreateHeader(input, "str");
             Console.WriteLine("Sent!!!");
         }
         catch (Exception ex)
@@ -49,32 +47,58 @@ class InputCheckAndSend
             Console.WriteLine("Error: " + ex.Message);
         }
     }
-    #endregion
 
- 
-    #region Private Functions
-
-    /// <summary>
-    /// Valid File path and File found -> IsValidFileExtension(data);
-    /// </summary>
-    private bool IsValidFileExtension(string input)
+    private bool IsValidPath(string input)
     {
-        string[] allowedExtensions = { ".txt", ".jpg", ".png", ".pdf", ".zip" };
-
-        string fileExtension = Path.GetExtension(input);
-
-        foreach (string allowedExtension in allowedExtensions)
+        if (Path.IsPathRooted(input) && (File.Exists(input) || Directory.Exists(input)))
         {
-            if (string.Equals(fileExtension, allowedExtension, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
+            return true;
         }
-
         return false;
     }
     #endregion
 
+    #region Private Functions
+
+    /// <summary>
+    /// Prepare special headers for string and file. 
+    /// Send the information combined with the header as bytes to the SendByte() function.
+    /// </summary>
+    /// <param name="input">The input string or file path.</param>
+    /// <param name="flag">The flag indicating whether the input is a file or a string.</param>
+    private void CreateHeader(string input, string flag)
+    {
+        byte[] inputBytes;
+        string header;
+        byte[] headerBytes;
+        byte[] finalBytes;
+
+        if (flag == "file")
+        {
+            inputBytes = File.ReadAllBytes(input);
+            string fileName = Path.GetFileNameWithoutExtension(input);
+            string fileExtension = Path.GetExtension(input);
+            Console.WriteLine("Enter the path where you want to save your file");
+            string pathToSave = Console.ReadLine();
+            if (!IsValidPath(pathToSave))
+                Console.WriteLine("Error");//memorycheck!!
+            header = "FileName: " + fileName + "\nFileExtension: " + fileExtension + "\npathToSave: " + pathToSave + "\nFileLength: " + inputBytes.Length + "\n"; 
+        }
+        else
+        {
+            inputBytes = Encoding.ASCII.GetBytes(input);
+            header = "StrLength: " + inputBytes.Length + "\n";
+        }
+        headerBytes = Encoding.ASCII.GetBytes(header);
+        finalBytes = new byte[headerBytes.Length + inputBytes.Length];
+        headerBytes.CopyTo(finalBytes, 0);
+        inputBytes.CopyTo(finalBytes, headerBytes.Length);
+
+        Console.WriteLine("Sending .. " + flag);
+        Client.SendBytes(finalBytes);
+    }
+
+    #endregion
 }
 
 /// <summary>
@@ -82,9 +106,17 @@ class InputCheckAndSend
 /// </summary>
 class TcpDataTransfer
 {
-    private TcpClient client;
-    private string ipAddress;
-    private int port;
+    #region Parameters;
+
+    private TcpClient Client;
+    private string IpAddress;
+    private int Port;
+    
+    /// <summary>
+    /// The buffer size for data transmission.
+    /// </summary>
+    private int Buffer;
+    #endregion
 
     #region Public
 
@@ -95,13 +127,68 @@ class TcpDataTransfer
     /// <param name="port">The port number to connect.</param> 
     public TcpDataTransfer(string ipAddress, int port)
     {
-        this.ipAddress = ipAddress;
-        this.port = port;
+        IpAddress = ipAddress;
+        Port = port;
+        Buffer = 1024 * 64;
         Connect();
+    }
+
+    /// <summary>
+    /// Disconnects from the server and releases resources.
+    /// </summary>
+    public void Disconnect()
+    {
+        try
+        {
+            Client.Close();
+            Client.Dispose();
+            Console.WriteLine("Disconnected from the server.");
+            Client = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while disconnecting" + ex.Message);
+        }
     }
     #endregion
 
-    #region Connection
+    #region Public Functions
+
+    public void SendBytes(byte[] finalBytes)
+    {
+        int finalLength = finalBytes.Length;
+        try
+        {
+            NetworkStream stream = Client.GetStream();
+
+            if (finalLength <= Buffer)
+            {
+                stream.Write(finalBytes, 0, finalLength);
+            }
+            else
+            {
+                //send in chunkd
+                int unsentBytes = finalLength;
+                int sentBytes = 0;
+
+                while (unsentBytes > 0)
+                {
+                    int len = Math.Min(unsentBytes, Buffer);
+                    stream.Write(finalBytes, sentBytes, len);
+                    unsentBytes -= len;
+                    sentBytes += len;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while sending text: " + ex.Message);
+        }
+    }
+    #endregion
+
+    #region Private Functions
+
     /// <summary>
     /// Connects to the server.
     /// </summary>
@@ -109,8 +196,8 @@ class TcpDataTransfer
     {
         try
         {
-            client = new TcpClient();
-            client.Connect(ipAddress, port);
+            Client = new TcpClient();
+            Client.Connect(IpAddress,Port);
             Console.WriteLine("Connected to server");
         }
         catch (Exception ex)
@@ -118,74 +205,19 @@ class TcpDataTransfer
             Debug.WriteLine("Error connecting to the server: " + ex.Message);
         }
     }
-
     #endregion
-
-    #region Data Transfer
-
-
-    /// <summary>
-    /// The requested string is converted into byte array and sent to the server via TCP connection.
-    /// </summary>
-    /// <param name="flag">Determine whether it is string or file path</param>
-    /// <param name="data">The data to be sent.</param>
-    public void SendString(string str)
-    {
-        Debug.WriteLine("Being Sent this string...." + str);
-
-        try
-        {
-            using (NetworkStream stream = client.GetStream())
-            {
-                // Translate the passed message into ASCII and store it as a !!!! Byte array!!!
-                byte[] strData = Encoding.ASCII.GetBytes(str);
-
-                // send string
-                stream.Write(strData, 0, strData.Length);
-                ReadResponse(stream, -1);
-            }
-        }
-        catch (Exception ex) 
-        {
-            Console.WriteLine("An error occurred while sending text: " + ex.Message);
-        }
-
-    }
-
-    /// send fileee---byte
-    public void SendFile(string filePath)
-    {
-        Debug.WriteLine("Being Sent this file...." + filePath);
-        try
-        {
-            NetworkStream stream = client.GetStream();
-            string header = "dataType: file\n";
-            byte[] fileData = File.ReadAllBytes(filePath);
-            byte[] headerBytes = Encoding.ASCII.GetBytes(header);
-            byte[] dataToSend = new byte[headerBytes.Length + fileData.Length];
-
-            //dataToSend content is created appropriately
-            headerBytes.CopyTo(dataToSend, 0);
-            fileData.CopyTo(dataToSend, headerBytes.Length);
-            // SEND MORE OPTIMIZED WITH BUFFER
-            stream.Write(dataToSend, 0, dataToSend.Length);
-            ReadResponse(stream, fileData.Length);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("An error occurred while sending file: " + ex.Message);
-        }
-    }
+}
 
 
-    #endregion
 
+/*
+ * 
     #region Server's Response
     /// <summary>
     /// Reads the server's response.
     /// </summary>
     /// <param name="stream">The NetworkStream used for reading.</param>
-    private void ReadResponse(NetworkStream stream, int dataLength)
+    /*private void ReadResponse(NetworkStream stream, int dataLength)
     {
         string response;
 
@@ -228,30 +260,4 @@ class TcpDataTransfer
         {
             Debug.WriteLine("Error reading server response: " + ex.Message);
         }
-    }
-
-    #endregion
-
-    #region Disconnect
-    /// <summary>
-    /// Disconnects from the server and releases resources.
-    /// </summary>
-    public void Disconnect()
-    {
-        try
-        {
-            client.Close();
-            client.Dispose();
-            Console.WriteLine("Disconnected from the server.");
-            client = null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("An error occurred while disconnecting" + ex.Message);
-        }
-    }
-
-    #endregion
- 
-}
-
+    }*/

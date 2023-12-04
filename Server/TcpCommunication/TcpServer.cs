@@ -7,22 +7,24 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 
-class FileType
-{
-
-}
-
 /// <summary>
-/// Represents a TCP server for handling client connections and requests.
-/// </summary>
+/// Represents a class that manages TCP connections.
+/// /// </summary>
 class Tcp_Server
 {
+    #region Parameters
+
     private TcpListener TcpListener;
     private string IpAddress;
     private int Port;
-    private int Fd;
 
-    #region Constructors
+    /// <summary>
+    /// Keeps the total number of connected clients
+    /// /// </summary>
+    private int ClientCount;
+    #endregion
+
+    #region Public
 
     /// <summary>
     /// Initializes and set parameters.
@@ -33,12 +35,26 @@ class Tcp_Server
     {
         IpAddress = ipAddress;
         Port = port;
-        Fd = 0;
+        ClientCount = 0;
     }
 
+    /// <summary>
+    /// Stops the server.
+    /// </summary>
+    public void Stop()
+    {
+        try
+        {
+            TcpListener?.Stop();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"aaaaaaAn error occurred while stopping the server: {ex.Message}");
+        }
+    }
     #endregion
 
-    #region Start
+    #region Public Functions
 
     /// <summary>
     /// Starts the server and listens for client connections.
@@ -57,7 +73,7 @@ class Tcp_Server
                 {
                     using (TcpClient client = await TcpListener.AcceptTcpClientAsync())
                     {
-                        Console.WriteLine(++Fd + ". client is connected! ");
+                        Console.WriteLine(++ClientCount + ". client is connected! ");
                         ProcessInput(client);
                     }
                 }
@@ -68,9 +84,18 @@ class Tcp_Server
             }
         }
     }
+
+    /// <summary>
+    /// Sends a response to the client through stream.
+    /// </summary>
+    public void SendResponse(NetworkStream stream, string response)
+    {
+        byte[] responseBytes = Encoding.ASCII.GetBytes(response);
+        stream.Write(responseBytes, 0, responseBytes.Length);
+    }
     #endregion
 
-    #region Process
+    #region Private Functions
 
     /// <summary>
     /// Processes the input received from the client.
@@ -105,7 +130,7 @@ class Tcp_Server
         int dataLength = messageParts[1].Length;
         byte[] messageData = Encoding.ASCII.GetBytes(messageParts[1]);
 
-        string savePath = Path.Combine("C:\\Users\\ebrar\\Desktop\\S\\ReceivedFiles", Fd.ToString() + ".txt");
+        string savePath = Path.Combine("C:\\Users\\ebrar\\Desktop\\S\\ReceivedFiles", ClientCount.ToString() + ".txt");
 
         // Write the file content to the specified file path
         File.WriteAllBytes(savePath, messageData);
@@ -114,40 +139,10 @@ class Tcp_Server
         return message;
     }
 
-
     private bool IsFileHeader(string data)
     {
         string headerPattern = "dataType: file\n";
         return data.Contains(headerPattern);
-    }
-
-
-    /// <summary>
-    /// Sends a response to the client through stream.
-    /// </summary>
-    public void SendResponse(NetworkStream stream, string response)
-    {
-        byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-        stream.Write(responseBytes, 0, responseBytes.Length);
-    }
-
-    #endregion
-
-    #region Stop
-
-    /// <summary>
-    /// Stops the server.
-    /// </summary>
-    public void Stop()
-    {
-        try
-        {
-            TcpListener?.Stop();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"aaaaaaAn error occurred while stopping the server: {ex.Message}");
-        }
     }
 
     #endregion

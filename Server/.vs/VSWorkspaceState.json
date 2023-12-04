@@ -3,6 +3,6 @@
     "",
     "\\TcpCommunication"
   ],
-  "SelectedNode": "\\TcpCommunication\\Program.cs",
+  "SelectedNode": "\\TcpCommunication\\TcpServer.cs",
   "PreviewInSolutionExplorer": false
 }
