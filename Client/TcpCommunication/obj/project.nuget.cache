@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "kab5ggy0ikGGL+WWovqKHqAyUPyY9SQvILRWdrRKeNyY+Tw/xXkmBczW2dyB5uos9wvbmRhsxtcZDAxKpr661Q==",
+  "dgSpecHash": "u6nsZhNVx/xh4RYbpk7UH3/r36TkvkZimMkiJ+XwgDns2OkUiNj4WulyLDLTHOeNmGfzKMwKOpU51m5EQrZCZA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\ebrar\\Desktop\\TcpClient\\TcpCommunication\\TcpClient.csproj",
+  "projectFilePath": "C:\\Users\\ebrar\\Desktop\\C\\TcpCommunication\\TcpClient.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

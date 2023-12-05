@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ebrar\\Desktop\\TcpServer\\TcpCommunication\\TcpServer.csproj",
+      "projectUniqueName": "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\TcpServer.csproj",
       "projectName": "TcpServer",
-      "projectPath": "C:\\Users\\ebrar\\Desktop\\TcpServer\\TcpCommunication\\TcpServer.csproj",
+      "projectPath": "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\TcpServer.csproj",
       "packagesPath": "C:\\Users\\ebrar\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ebrar\\Desktop\\TcpServer\\TcpCommunication\\obj\\",
+      "outputPath": "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\ebrar\\AppData\\Roaming\\NuGet\\NuGet.Config",

@@ -6,6 +6,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.IO;
+using Microsoft.VisualBasic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 class InputCheckAndSend
@@ -39,9 +42,7 @@ class InputCheckAndSend
             if(IsValidPath(input))
                 CreateHeader(input, "file");       
             else
-                CreateHeader(input, "str");
-            Console.WriteLine("Sent!!!");
-        }
+                CreateHeader(input, "str");        }
         catch (Exception ex)
         {
             Console.WriteLine("Error: " + ex.Message);
@@ -86,16 +87,18 @@ class InputCheckAndSend
         }
         else
         {
-            inputBytes = Encoding.ASCII.GetBytes(input);
+            inputBytes = Encoding.UTF8.GetBytes(input);
             header = "StrLength: " + inputBytes.Length + "\n";
         }
-        headerBytes = Encoding.ASCII.GetBytes(header);
+        Debug.WriteLine("Client: Transferred Header Information:");
+        Debug.WriteLine(header);
+        headerBytes = Encoding.UTF8.GetBytes(header);
         finalBytes = new byte[headerBytes.Length + inputBytes.Length];
         headerBytes.CopyTo(finalBytes, 0);
         inputBytes.CopyTo(finalBytes, headerBytes.Length);
 
-        Console.WriteLine("Sending .. " + flag);
         Client.SendBytes(finalBytes);
+        Client.ReadResponse();
     }
 
     #endregion
@@ -144,6 +147,7 @@ class TcpDataTransfer
             Client.Dispose();
             Console.WriteLine("Disconnected from the server.");
             Client = null;
+
         }
         catch (Exception ex)
         {
@@ -153,6 +157,7 @@ class TcpDataTransfer
     #endregion
 
     #region Public Functions
+
 
     public void SendBytes(byte[] finalBytes)
     {
@@ -185,6 +190,27 @@ class TcpDataTransfer
             Console.WriteLine("An error occurred while sending text: " + ex.Message);
         }
     }
+
+    /// <summary>
+    /// Reads the server's response.
+    /// </summary>
+    /// <param name="stream">The NetworkStream used for reading.</param>
+    public void ReadResponse()
+    {
+        try
+        {
+            NetworkStream stream = Client.GetStream();
+            byte[] responseByte = new byte[1024];
+            int bytesRead = stream.Read(responseByte, 0, responseByte.Length);
+            string message = Encoding.UTF8.GetString(responseByte, 0, bytesRead);
+            Console.WriteLine(message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while receiving response: " + ex.Message);
+        }
+    }
+
     #endregion
 
     #region Private Functions
@@ -209,55 +235,4 @@ class TcpDataTransfer
 }
 
 
-
-/*
- * 
-    #region Server's Response
-    /// <summary>
-    /// Reads the server's response.
-    /// </summary>
-    /// <param name="stream">The NetworkStream used for reading.</param>
-    /*private void ReadResponse(NetworkStream stream, int dataLength)
-    {
-        string response;
-
-        try
-        {
-            if (dataLength > 0)
-            {
-                byte[] headerBuffer = new byte[1024];
-                int headerBytesRead = stream.Read(headerBuffer, 0, headerBuffer.Length); //If there is no data, the program is waiting
-                
-                string header = Encoding.ASCII.GetString(headerBuffer, 0, headerBytesRead);
-
-                // Read file data, header not included!!
-                byte[] fileBuffer = new byte[dataLength];
-
-                int totalBytesRead = 0;
-
-                while (totalBytesRead < dataLength)
-                {
-                    int bytesToRead = Math.Min(1024, dataLength - totalBytesRead);
-                    int bytesReadFromFile = stream.Read(fileBuffer, totalBytesRead, bytesToRead);
-                    totalBytesRead += bytesReadFromFile;
-                    if (bytesReadFromFile == 0)
-                    {
-                        // there is no data and we can exit the loop.
-                        break;
-                    }
-                }
-                response = Encoding.ASCII.GetString(fileBuffer);
-            }
-            else
-            {
-                byte[] responseData = new byte[1024];
-                int bytesRead = stream.Read(responseData, 0, responseData.Length);
-                response = Encoding.ASCII.GetString(responseData, 0, bytesRead);
-            }
-            Console.WriteLine("Sent!!!...Server Response: " + response);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine("Error reading server response: " + ex.Message);
-        }
-    }*/
+    

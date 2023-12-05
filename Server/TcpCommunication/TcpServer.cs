@@ -15,13 +15,12 @@ class Tcp_Server
     #region Parameters
 
     private TcpListener TcpListener;
+    private TcpClient Client;
     private string IpAddress;
     private int Port;
-
-    /// <summary>
-    /// Keeps the total number of connected clients
-    /// /// </summary>
-    private int ClientCount;
+    private int Buffer;
+    private int DataLength;
+    private string LeftData;
     #endregion
 
     #region Public
@@ -35,7 +34,9 @@ class Tcp_Server
     {
         IpAddress = ipAddress;
         Port = port;
-        ClientCount = 0;
+        Buffer = 1024 * 64;
+        DataLength = 0;
+        LeftData = "";
     }
 
     /// <summary>
@@ -69,12 +70,13 @@ class Tcp_Server
                 TcpListener.Start();
                 Console.WriteLine("Server is listening on " + IpAddress + ":" + Port);
 
+                int i = 1;
                 while (true)
                 {
-                    using (TcpClient client = await TcpListener.AcceptTcpClientAsync())
+                    using (Client = await TcpListener.AcceptTcpClientAsync())
                     {
-                        Console.WriteLine(++ClientCount + ". client is connected! ");
-                        ProcessInput(client);
+                        Console.WriteLine(i++ + ". client is connected! ");
+                        ReceiveBytes();
                     }
                 }
             }
@@ -85,14 +87,6 @@ class Tcp_Server
         }
     }
 
-    /// <summary>
-    /// Sends a response to the client through stream.
-    /// </summary>
-    public void SendResponse(NetworkStream stream, string response)
-    {
-        byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-        stream.Write(responseBytes, 0, responseBytes.Length);
-    }
     #endregion
 
     #region Private Functions
@@ -100,21 +94,23 @@ class Tcp_Server
     /// <summary>
     /// Processes the input received from the client.
     /// </summary>
-    private void ProcessInput(TcpClient client)
+    private void ReceiveBytes()
     {
-        using NetworkStream stream = client.GetStream();
+        using NetworkStream stream = Client.GetStream();
         {
             try
             {
-                byte[] data = new byte[1024]; //make specific****
-                int bytesRead = stream.Read(data, 0, data.Length);
-                string message = Encoding.ASCII.GetString(data, 0, bytesRead);
-                if (IsFileHeader(message))
+                byte[] input = new byte[Buffer];
+                int bytesRead = stream.Read(input, 0, input.Length);
+                string message = Encoding.UTF8.GetString(input, 0, bytesRead);
+                if (message.StartsWith("File"))
                 {
-                    message = FileProcess(message, stream); 
+                    FileProcess(message);
                 }
-                Console.WriteLine(message);
-                SendResponse(stream, message);
+                else
+                    StrProcess(message);
+                Console.WriteLine("Message Received!");
+                SendResponse();
             }
             catch (Exception ex)
             {
@@ -123,26 +119,64 @@ class Tcp_Server
         }
     }
 
-    private string FileProcess(string message, NetworkStream stream)
+
+    /// <summary>
+    /// Separates header and file information and saves the transferred file
+    /// </summary>
+    /// <param name="header">The input header string contains header and file information.</param>
+    private void FileProcess(string header)
     {
-        // Extract file name from file header
-        string[] messageParts = message.Split(" file\n");
-        int dataLength = messageParts[1].Length;
-        byte[] messageData = Encoding.ASCII.GetBytes(messageParts[1]);
+        string[] headerLines = header.Split('\n');
+        string fileName = headerLines[0].Replace("FileName: ", "");
+        string fileExtension = headerLines[1].Replace("FileExtension: ", "");
+        string pathToSave = headerLines[2].Replace("pathToSave: ", "");
+        DataLength = int.Parse(headerLines[3].Replace("FileLength: ", ""));
+        
+        try
+        {
+            LeftData = string.Join("\n", headerLines.Skip(4));
+            byte[] leftDataBytes = Encoding.UTF8.GetBytes(LeftData);
 
-        string savePath = Path.Combine("C:\\Users\\ebrar\\Desktop\\S\\ReceivedFiles", ClientCount.ToString() + ".txt");
-
-        // Write the file content to the specified file path
-        File.WriteAllBytes(savePath, messageData);
-        Debug.WriteLine("Dosya başarıyla alındı ve kopyalandı.");
-       
-        return message;
+            string savePath = Path.Combine(pathToSave + "/" + fileName + fileExtension);
+            Debug.WriteLine("Server: Incoming Header Information:");
+            Debug.WriteLine(string.Join("\n", fileName, fileExtension, pathToSave, DataLength.ToString(), savePath));
+            File.WriteAllBytes(savePath, leftDataBytes);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("FileProcess Error! " + ex.Message);
+        }
     }
 
-    private bool IsFileHeader(string data)
+    /// <summary>
+    /// Separates header and data information
+    /// </summary>
+    /// <param name="header">The input header string contains header and data information</param>
+    private void StrProcess(string header)
     {
-        string headerPattern = "dataType: file\n";
-        return data.Contains(headerPattern);
+        string[] headerLines = header.Split('\n');
+        DataLength = int.Parse(headerLines[0].Replace("StrLength: ", ""));
+        LeftData = string.Join("\n", headerLines.Skip(1));
+        Debug.WriteLine("Incoming Header Information:");
+        Debug.WriteLine(DataLength.ToString());
+    }
+
+    /// <summary>
+    /// Sends a response to the client through stream.
+    /// </summary>
+    private void SendResponse()
+    {
+        string response = "Server's response: transfer is successful!";
+        try
+        {
+            NetworkStream stream = Client.GetStream();
+            byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+            stream.Write(responseBytes, 0, responseBytes.Length);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred while SENDRESPONSE() " + ex.Message);
+        }
     }
 
     #endregion

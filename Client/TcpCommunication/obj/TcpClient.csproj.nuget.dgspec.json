@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ebrar\\Desktop\\TcpClient\\TcpCommunication\\TcpClient.csproj": {}
+    "C:\\Users\\ebrar\\Desktop\\C\\TcpCommunication\\TcpClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ebrar\\Desktop\\TcpClient\\TcpCommunication\\TcpClient.csproj": {
+    "C:\\Users\\ebrar\\Desktop\\C\\TcpCommunication\\TcpClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ebrar\\Desktop\\TcpClient\\TcpCommunication\\TcpClient.csproj",
+        "projectUniqueName": "C:\\Users\\ebrar\\Desktop\\C\\TcpCommunication\\TcpClient.csproj",
         "projectName": "TcpClient",
-        "projectPath": "C:\\Users\\ebrar\\Desktop\\TcpClient\\TcpCommunication\\TcpClient.csproj",
+        "projectPath": "C:\\Users\\ebrar\\Desktop\\C\\TcpCommunication\\TcpClient.csproj",
         "packagesPath": "C:\\Users\\ebrar\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ebrar\\Desktop\\TcpClient\\TcpCommunication\\obj\\",
+        "outputPath": "C:\\Users\\ebrar\\Desktop\\C\\TcpCommunication\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ebrar\\AppData\\Roaming\\NuGet\\NuGet.Config",
