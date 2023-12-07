@@ -21,6 +21,9 @@ class Tcp_Server
     private int Buffer;
     private int DataLength;
     private string LeftData;
+    public bool ServerActive = false;
+    private bool ClientConnected = false;
+    private bool ListenerActive = false;
     #endregion
 
     #region Public
@@ -37,6 +40,37 @@ class Tcp_Server
         Buffer = 1024 * 64;
         DataLength = 0;
         LeftData = "";
+        ServerActive = true;
+    }
+
+    /// <summary>
+    /// Starts the server and listens for client connections.
+    /// </summary>
+    public async void Start()
+    {
+        TcpListener = new TcpListener(IPAddress.Parse(IpAddress), Port);
+        try
+        {
+            TcpListener.Start();
+            ListenerActive = true;
+            Console.WriteLine("Server is listening on " + IpAddress + ":" + Port);
+
+            int i = 1;
+            while (true)
+            {
+                Client = await TcpListener.AcceptTcpClientAsync();
+                ClientConnected = true;
+                Console.WriteLine(i++ + ". client is connected! ");
+
+                ReceiveBytes();
+                Console.WriteLine("555");
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("An error occurred while starting the server: " + ex.Message);
+        }
     }
 
     /// <summary>
@@ -46,48 +80,23 @@ class Tcp_Server
     {
         try
         {
-            TcpListener?.Stop();
+
+            ClientConnected = false;
+            Client.Close();
+            Client = null;
+
+            ListenerActive = false;
+            TcpListener.Stop();
+            TcpListener = null;
+
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Debug.WriteLine($"aaaaaaAn error occurred while stopping the server: {ex.Message}");
+            Debug.WriteLine("Failed to Stop server! : " + e.ToString());
         }
     }
     #endregion
 
-    #region Public Functions
-
-    /// <summary>
-    /// Starts the server and listens for client connections.
-    /// </summary>
-    public async void Start()
-    {
-        /// TcpListener initialization
-        using (TcpListener = new TcpListener(IPAddress.Parse(IpAddress), Port))
-        {
-            try
-            {
-                TcpListener.Start();
-                Console.WriteLine("Server is listening on " + IpAddress + ":" + Port);
-
-                int i = 1;
-                while (true)
-                {
-                    using (Client = await TcpListener.AcceptTcpClientAsync())
-                    {
-                        Console.WriteLine(i++ + ". client is connected! ");
-                        ReceiveBytes();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("An error occurred while starting the server: " + ex.Message);
-            }
-        }
-    }
-
-    #endregion
 
     #region Private Functions
 

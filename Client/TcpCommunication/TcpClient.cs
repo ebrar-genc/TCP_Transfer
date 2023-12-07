@@ -10,10 +10,14 @@ using System.IO;
 using Microsoft.VisualBasic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-
+public enum DataType
+{
+    String,
+    File
+}
 class InputCheckAndSend
 {
-    #region Parameters;
+    #region Parameters
 
     TcpDataTransfer Client;
     #endregion
@@ -40,9 +44,9 @@ class InputCheckAndSend
         try
         {
             if(IsValidPath(input))
-                CreateHeader(input, "file");       
+                CreateHeader(input, DataType.File);       
             else
-                CreateHeader(input, "str");        }
+                CreateHeader(input, DataType.String);        }
         catch (Exception ex)
         {
             Console.WriteLine("Error: " + ex.Message);
@@ -67,14 +71,14 @@ class InputCheckAndSend
     /// </summary>
     /// <param name="input">The input string or file path.</param>
     /// <param name="flag">The flag indicating whether the input is a file or a string.</param>
-    private void CreateHeader(string input, string flag)
+    private void CreateHeader(string input, DataType dataType)
     {
         byte[] inputBytes;
         string header;
         byte[] headerBytes;
         byte[] finalBytes;
 
-        if (flag == "file")
+        if (dataType == DataType.File)
         {
             inputBytes = File.ReadAllBytes(input);
             string fileName = Path.GetFileNameWithoutExtension(input);
@@ -114,6 +118,7 @@ class TcpDataTransfer
     private TcpClient Client;
     private string IpAddress;
     private int Port;
+    public bool ClientActive = false;
     
     /// <summary>
     /// The buffer size for data transmission.
@@ -143,15 +148,17 @@ class TcpDataTransfer
     {
         try
         {
-            Client.Close();
-            Client.Dispose();
-            Console.WriteLine("Disconnected from the server.");
+            if (Client != null && Client.Connected)
+            {
+                Client.Close();
+                Client.Dispose();
+                Console.WriteLine("Disconnected from the server.");
+            }
             Client = null;
-
         }
         catch (Exception ex)
         {
-            Console.WriteLine("An error occurred while disconnecting" + ex.Message);
+            Console.WriteLine("An error occurred while disconnecting: " + ex.Message);
         }
     }
     #endregion
@@ -189,6 +196,7 @@ class TcpDataTransfer
         {
             Console.WriteLine("An error occurred while sending text: " + ex.Message);
         }
+
     }
 
     /// <summary>
@@ -207,23 +215,26 @@ class TcpDataTransfer
         }
         catch (Exception ex)
         {
-            Console.WriteLine("An error occurred while receiving response: " + ex.Message);
+            Console.WriteLine("aaAn error occurred while receiving response: " + ex.Message);
+            Console.WriteLine("aaaAn error occurred while receiving response: " + ex.ToString());
+
         }
     }
 
-    #endregion
+#endregion
 
-    #region Private Functions
+#region Private Functions
 
-    /// <summary>
-    /// Connects to the server.
-    /// </summary>
-    private void Connect()
+/// <summary>
+/// Connects to the server.
+/// </summary>
+private void Connect()
     {
         try
         {
             Client = new TcpClient();
             Client.Connect(IpAddress,Port);
+            ClientActive = true;
             Console.WriteLine("Connected to server");
         }
         catch (Exception ex)

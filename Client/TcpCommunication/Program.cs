@@ -20,22 +20,40 @@ class Program
     {
         //string ip;
         int port = 3001;
-        int flag = 0;
 
         Console.WriteLine("Welcome to TcpClient.");
         Console.WriteLine("Enter the IP of the server to connect to");
         //ip = Console.ReadLine();
 
-        TcpDataTransfer client = new TcpDataTransfer("127.0.0.1", port);
-        InputCheckAndSend data = new InputCheckAndSend(client);
-
-        while (true)
+        try
         {
-            Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
-            string input = Console.ReadLine();
-            if (input == "disconnect")
-                break;
-            data.IsPath(input);
+            while (true)
+            {
+                TcpDataTransfer client = new TcpDataTransfer("192.168.1.112", port);
+                InputCheckAndSend data = new InputCheckAndSend(client);
+
+                Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
+                string input = Console.ReadLine();
+                if (input == "disconnect!")
+                {
+                    client.Disconnect();
+                    Console.WriteLine("Disconnected. Do you want to connect again? (y/n)");
+                    string reconnectInput = Console.ReadLine();
+                    if (reconnectInput != "y")
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    data.IsPath(input);
+                    client.Disconnect();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Main Error: " + ex.Message);
         }
 
     }

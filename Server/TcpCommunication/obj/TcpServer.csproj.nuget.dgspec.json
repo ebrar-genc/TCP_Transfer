@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\TcpServer.csproj": {}
+    "C:\\Users\\ebrar\\Desktop\\Server\\TcpCommunication\\TcpServer.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\TcpServer.csproj": {
+    "C:\\Users\\ebrar\\Desktop\\Server\\TcpCommunication\\TcpServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\TcpServer.csproj",
+        "projectUniqueName": "C:\\Users\\ebrar\\Desktop\\Server\\TcpCommunication\\TcpServer.csproj",
         "projectName": "TcpServer",
-        "projectPath": "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\TcpServer.csproj",
+        "projectPath": "C:\\Users\\ebrar\\Desktop\\Server\\TcpCommunication\\TcpServer.csproj",
         "packagesPath": "C:\\Users\\ebrar\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ebrar\\Desktop\\S\\TcpCommunication\\obj\\",
+        "outputPath": "C:\\Users\\ebrar\\Desktop\\Server\\TcpCommunication\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ebrar\\AppData\\Roaming\\NuGet\\NuGet.Config",
