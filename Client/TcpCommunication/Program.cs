@@ -7,6 +7,7 @@ using static System.Formats.Asn1.AsnWriter;
 using System.Security.AccessControl;
 using System.Security.Permissions;
 using System.Security;
+using Tcp_Client;
 
 
 class Program
@@ -18,36 +19,53 @@ class Program
     /// </summary>
     static void Main()
     {
-        //string ip;
+        string ip;
         int port = 3001;
+        int flag = 0;
 
         Console.WriteLine("Welcome to TcpClient.");
         Console.WriteLine("Enter the IP of the server to connect to");
-        //ip = Console.ReadLine();
+        ip = Console.ReadLine();
+
+        TcpDataTransfer client = new TcpDataTransfer(ip, port);
+        InputAnalysis inputAnalysis = new InputAnalysis();
 
         try
         {
             while (true)
             {
-                TcpDataTransfer client = new TcpDataTransfer("192.168.1.112", port);
-                InputCheckAndSend data = new InputCheckAndSend(client);
-
+                if (flag == 1)
+                {
+                    Console.WriteLine("Enter the IP of the server to connect to");
+                    ip = Console.ReadLine();
+                    client = new TcpDataTransfer(ip, port);
+                }
                 Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
                 string input = Console.ReadLine();
                 if (input == "disconnect!")
                 {
                     client.Disconnect();
-                    Console.WriteLine("Disconnected. Do you want to connect again? (y/n)");
+                    Console.WriteLine("Disconnected. Do you want to connect again? (yes/no)");
                     string reconnectInput = Console.ReadLine();
-                    if (reconnectInput != "y")
+                    if (reconnectInput == "yes")
                     {
+                        byte[] data = inputAnalysis.Analysis(reconnectInput);
+                        client.SendBytes(data);
+                        flag = 1;
+                    }
+                    else if (reconnectInput == "no") 
+                    {
+                        Console.WriteLine("Client was closed..");
                         break;
                     }
+                        
                 }
                 else
                 {
-                    data.IsPath(input);
-                    client.Disconnect();
+                    byte[] data = inputAnalysis.Analysis(input);
+                    client.SendBytes(data);
+                    if (flag == 1)
+                        flag = 0;
                 }
             }
         }
@@ -55,12 +73,7 @@ class Program
         {
             Console.WriteLine("Main Error: " + ex.Message);
         }
-
+        Console.ReadLine();
     }
     #endregion
 }
-
-
-
-
-

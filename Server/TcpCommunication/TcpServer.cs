@@ -114,7 +114,7 @@ class Tcp_Server
                 string message = Encoding.UTF8.GetString(input, 0, bytesRead);
                 if (message.StartsWith("File"))
                 {
-                    FileProcess(message);
+                    FileProcess(message, input);
                 }
                 else
                     StrProcess(message);
@@ -133,19 +133,24 @@ class Tcp_Server
     /// Separates header and file information and saves the transferred file
     /// </summary>
     /// <param name="header">The input header string contains header and file information.</param>
-    private void FileProcess(string header)
+    private void FileProcess(string header, byte[] input)
     {
         string[] headerLines = header.Split('\n');
         string fileName = headerLines[0].Replace("FileName: ", "");
         string fileExtension = headerLines[1].Replace("FileExtension: ", "");
         string pathToSave = headerLines[2].Replace("pathToSave: ", "");
         DataLength = int.Parse(headerLines[3].Replace("FileLength: ", ""));
-        
+        int index = 93;
+        /*for (int i = 0; i < 4; i++)
+        {
+            index += headerLines.Length + 1;
+        }*/
+
         try
         {
-            LeftData = string.Join("\n", headerLines.Skip(4));
-            byte[] leftDataBytes = Encoding.UTF8.GetBytes(LeftData);
 
+            byte[] leftDataBytes = new byte[input.Length - index - 1];
+            Array.Copy(input, index + 1, leftDataBytes, 0, leftDataBytes.Length);
             string savePath = Path.Combine(pathToSave + "/" + fileName + fileExtension);
             Debug.WriteLine("Server: Incoming Header Information:");
             Debug.WriteLine(string.Join("\n", fileName, fileExtension, pathToSave, DataLength.ToString(), savePath));

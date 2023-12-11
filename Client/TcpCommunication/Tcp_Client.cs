@@ -10,103 +10,6 @@ using System.IO;
 using Microsoft.VisualBasic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-public enum DataType
-{
-    String,
-    File
-}
-class InputCheckAndSend
-{
-    #region Parameters
-
-    TcpDataTransfer Client;
-    #endregion
-
-    #region Public
-
-    /// <summary>
-    /// Initializes a new instance.
-    /// </summary>
-    public InputCheckAndSend(TcpDataTransfer client)
-    {
-        Client = client;
-    }
-    #endregion
-
-    #region Public Function
-
-    /// <summary>
-    /// Check whether it is string or file and call CreateHeader() function to prepare header.
-    /// </summary>
-    /// <param name="input">The input string or file path.</param>
-    public void IsPath(string input)
-    {
-        try
-        {
-            if(IsValidPath(input))
-                CreateHeader(input, DataType.File);       
-            else
-                CreateHeader(input, DataType.String);        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error: " + ex.Message);
-        }
-    }
-
-    private bool IsValidPath(string input)
-    {
-        if (Path.IsPathRooted(input) && (File.Exists(input) || Directory.Exists(input)))
-        {
-            return true;
-        }
-        return false;
-    }
-    #endregion
-
-    #region Private Functions
-
-    /// <summary>
-    /// Prepare special headers for string and file. 
-    /// Send the information combined with the header as bytes to the SendByte() function.
-    /// </summary>
-    /// <param name="input">The input string or file path.</param>
-    /// <param name="flag">The flag indicating whether the input is a file or a string.</param>
-    private void CreateHeader(string input, DataType dataType)
-    {
-        byte[] inputBytes;
-        string header;
-        byte[] headerBytes;
-        byte[] finalBytes;
-
-        if (dataType == DataType.File)
-        {
-            inputBytes = File.ReadAllBytes(input);
-            string fileName = Path.GetFileNameWithoutExtension(input);
-            string fileExtension = Path.GetExtension(input);
-            Console.WriteLine("Enter the path where you want to save your file");
-            string pathToSave = Console.ReadLine();
-            if (!IsValidPath(pathToSave))
-                Console.WriteLine("Error");//memorycheck!!
-            header = "FileName: " + fileName + "\nFileExtension: " + fileExtension + "\npathToSave: " + pathToSave + "\nFileLength: " + inputBytes.Length + "\n"; 
-        }
-        else
-        {
-            inputBytes = Encoding.UTF8.GetBytes(input);
-            header = "StrLength: " + inputBytes.Length + "\n";
-        }
-        Debug.WriteLine("Client: Transferred Header Information:");
-        Debug.WriteLine(header);
-        headerBytes = Encoding.UTF8.GetBytes(header);
-        finalBytes = new byte[headerBytes.Length + inputBytes.Length];
-        headerBytes.CopyTo(finalBytes, 0);
-        inputBytes.CopyTo(finalBytes, headerBytes.Length);
-
-        Client.SendBytes(finalBytes);
-        Client.ReadResponse();
-    }
-
-    #endregion
-}
 
 /// <summary>
 /// Represents a TCP client for communication with a server.
@@ -119,7 +22,7 @@ class TcpDataTransfer
     private string IpAddress;
     private int Port;
     public bool ClientActive = false;
-    
+
     /// <summary>
     /// The buffer size for data transmission.
     /// </summary>
@@ -221,19 +124,19 @@ class TcpDataTransfer
         }
     }
 
-#endregion
+    #endregion
 
-#region Private Functions
+    #region Private Functions
 
-/// <summary>
-/// Connects to the server.
-/// </summary>
-private void Connect()
+    /// <summary>
+    /// Connects to the server.
+    /// </summary>
+    private void Connect()
     {
         try
         {
             Client = new TcpClient();
-            Client.Connect(IpAddress,Port);
+            Client.Connect(IpAddress, Port);
             ClientActive = true;
             Console.WriteLine("Connected to server");
         }
@@ -246,4 +149,3 @@ private void Connect()
 }
 
 
-    
