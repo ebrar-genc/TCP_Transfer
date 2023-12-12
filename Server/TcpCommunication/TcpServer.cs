@@ -160,24 +160,18 @@ class Tcp_Server
                 if (receivedMessage != null)
                 {
                     Console.WriteLine("Received data type: " + receivedMessage.Header.DataType);
+                    Console.WriteLine("Received content length: " + receivedMessage.Header.ContentLength);
                     Console.WriteLine("Received file name: " + receivedMessage.Header.FileName);
                     Console.WriteLine("Received data: " + receivedMessage.Content);
+
+                    byte[] contentByte = ReadContent(stream, receivedMessage.Header.ContentLength);
+
+                    HandleReceivedData(receivedMessage, contentByte);
                 }
                 else
                 {
                     Console.WriteLine("Failed to parse the message header.");
                 }
-                /* byte[] input = new byte[Buffer];
-                 int bytesRead = stream.Read(input, 0, input.Length);
-                 string message = Encoding.UTF8.GetString(input, 0, bytesRead);
-                 if (message.StartsWith("File"))
-                 {
-                     FileProcess(message, input);
-                 }
-                 else
-                     StrProcess(message);
-                 Console.WriteLine("Message Received!");
-                 SendResponse();*/
             }
             catch (Exception ex)
             {
@@ -187,51 +181,63 @@ class Tcp_Server
     }
 
 
-    /// <summary>
-    /// Separates header and file information and saves the transferred file
-    /// </summary>
-    /// <param name="header">The input header string contains header and file information.</param>
-    private void FileProcess(string header, byte[] input)
+    private byte[] ReadContent(NetworkStream stream, int contentLength)
     {
-        string[] headerLines = header.Split('\n');
-        string fileName = headerLines[0].Replace("FileName: ", "");
-        string fileExtension = headerLines[1].Replace("FileExtension: ", "");
-        string pathToSave = headerLines[2].Replace("pathToSave: ", "");
-        DataLength = int.Parse(headerLines[3].Replace("FileLength: ", ""));
-        int index = 93;
-        /*for (int i = 0; i < 4; i++)
-        {
-            index += headerLines.Length + 1;
-        }*/
+        Console.WriteLine("111");
+        byte[] contentByte = new byte[contentLength];
 
-        try
+        if (contentLength <= Buffer)
         {
+            Console.WriteLine("222");
+            Console.WriteLine(contentByte.Length);
 
-            byte[] leftDataBytes = new byte[input.Length - index - 1];
-            Array.Copy(input, index + 1, leftDataBytes, 0, leftDataBytes.Length);
-            string savePath = Path.Combine(pathToSave + "/" + fileName + fileExtension);
-            Debug.WriteLine("Server: Incoming Header Information:");
-            Debug.WriteLine(string.Join("\n", fileName, fileExtension, pathToSave, DataLength.ToString(), savePath));
-            File.WriteAllBytes(savePath, leftDataBytes);
+            stream.Read(contentByte, 0, contentByte.Length);
+            Console.WriteLine("777");
+
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine("FileProcess Error! " + ex.Message);
+            Console.WriteLine("333");
+
+            // Send in chunks
+            int unreadBytes = contentLength;
+            int readBytes = 0;
+            Console.WriteLine("444");
+
+            while (unreadBytes > 0)
+            {
+                Console.WriteLine("555");
+
+                int len = Math.Min(unreadBytes, Buffer);
+                stream.Read(contentByte, readBytes, len);
+                unreadBytes -= len;
+                readBytes += len;
+            }
         }
+        Console.WriteLine("666");
+        Console.WriteLine(contentByte.ToString);
+
+
+        return contentByte;
     }
 
-    /// <summary>
-    /// Separates header and data information
-    /// </summary>
-    /// <param name="header">The input header string contains header and data information</param>
-    private void StrProcess(string header)
+    private void HandleReceivedData(Message receivedMessage, byte[] contentByte)
     {
-        string[] headerLines = header.Split('\n');
-        DataLength = int.Parse(headerLines[0].Replace("StrLength: ", ""));
-        LeftData = string.Join("\n", headerLines.Skip(1));
-        Debug.WriteLine("Incoming Header Information:");
-        Debug.WriteLine(DataLength.ToString());
+        if (receivedMessage.Header.DataType == DataTypes.String)
+        {
+            string message = Encoding.UTF8.GetString(contentByte, 0, contentByte.Length);
+            Console.WriteLine("Message Received! ---> " + message);
+        }
+        else if (receivedMessage.Header.DataType == DataTypes.File)
+        {
+            string savePath = "\"C:\\Users\\ebrar\\Desktop\\aa\\selam.txt.txt\"";
+            Console.WriteLine("here");
+            File.WriteAllBytes(savePath, contentByte);
+        }
+
+        SendResponse();
     }
+
 
     /// <summary>
     /// Sends a response to the client through stream.
