@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
+using TcpServer;
 
 
 /// <summary>
@@ -61,10 +62,7 @@ class Tcp_Server
                 Client = await TcpListener.AcceptTcpClientAsync();
                 ClientConnected = true;
                 Console.WriteLine(i++ + ". client is connected! ");
-
                 ReceiveBytes();
-                Console.WriteLine("555");
-
             }
         }
         catch (Exception ex)
@@ -98,7 +96,56 @@ class Tcp_Server
     #endregion
 
 
+    public Message ReadMessage(NetworkStream stream)
+    {
+        byte[] headerName = new byte[5];
+        stream.Read(headerName, 0, headerName.Length);
+
+        Header header = ParseHeader(headerName, stream);
+        if (header != null)
+        {
+            byte[] contentBytes = new byte[header.ContentLength];
+            stream.Read(contentBytes, 0, contentBytes.Length);
+
+            string content = Encoding.UTF8.GetString(contentBytes);
+
+            return new Message { Header = header, Content = content };
+        }
+        return null;
+    }
+
+    private Header ParseHeader(byte[] headerBytes, NetworkStream stream)
+    {
+        DataTypes dataType = (DataTypes)headerBytes[0];
+
+        if (dataType == DataTypes.String)
+        {
+            int contentLen = BitConverter.ToInt32(headerBytes, 1);
+            return new Header { DataType = dataType, ContentLength = contentLen };//sıradaki contentlen kadar gelen string
+        }
+        else if (dataType == DataTypes.File)
+        {
+            //başlık uzunluğu
+            int headerLen = BitConverter.ToInt32(headerBytes, 1);
+
+            // Başlığı oku
+            byte[] contentByte = new byte[4];
+            stream.Read(contentByte, 0, contentByte.Length);
+            int contentLen = BitConverter.ToInt32(contentByte, 0);
+
+            // Dosya ismini oku(headerLen - contentLen(4byte) - 5byte)
+            byte[] fileNameBytes = new byte[headerLen - 9];
+            stream.Read(fileNameBytes, 0, fileNameBytes.Length);
+            string fileName = Encoding.UTF8.GetString(fileNameBytes);
+
+            return new Header { DataType = dataType, ContentLength = contentLen, FileName = fileName };
+        }
+        return null;
+    }
+
     #region Private Functions
+
+
 
     /// <summary>
     /// Processes the input received from the client.
@@ -109,17 +156,28 @@ class Tcp_Server
         {
             try
             {
-                byte[] input = new byte[Buffer];
-                int bytesRead = stream.Read(input, 0, input.Length);
-                string message = Encoding.UTF8.GetString(input, 0, bytesRead);
-                if (message.StartsWith("File"))
+                Message receivedMessage = ReadMessage(stream);
+                if (receivedMessage != null)
                 {
-                    FileProcess(message, input);
+                    Console.WriteLine("Received data type: " + receivedMessage.Header.DataType);
+                    Console.WriteLine("Received file name: " + receivedMessage.Header.FileName);
+                    Console.WriteLine("Received data: " + receivedMessage.Content);
                 }
                 else
-                    StrProcess(message);
-                Console.WriteLine("Message Received!");
-                SendResponse();
+                {
+                    Console.WriteLine("Failed to parse the message header.");
+                }
+                /* byte[] input = new byte[Buffer];
+                 int bytesRead = stream.Read(input, 0, input.Length);
+                 string message = Encoding.UTF8.GetString(input, 0, bytesRead);
+                 if (message.StartsWith("File"))
+                 {
+                     FileProcess(message, input);
+                 }
+                 else
+                     StrProcess(message);
+                 Console.WriteLine("Message Received!");
+                 SendResponse();*/
             }
             catch (Exception ex)
             {

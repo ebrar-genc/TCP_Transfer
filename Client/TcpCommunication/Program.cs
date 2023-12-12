@@ -25,9 +25,9 @@ class Program
 
         Console.WriteLine("Welcome to TcpClient.");
         Console.WriteLine("Enter the IP of the server to connect to");
-        ip = Console.ReadLine();
+        //ip = Console.ReadLine();
 
-        TcpDataTransfer client = new TcpDataTransfer(ip, port);
+        TcpDataTransfer client = new TcpDataTransfer("192.168.1.112", port);
         InputAnalysis inputAnalysis = new InputAnalysis();
 
         try
@@ -36,9 +36,9 @@ class Program
             {
                 if (flag == 1)
                 {
-                    Console.WriteLine("Enter the IP of the server to connect to");
-                    ip = Console.ReadLine();
-                    client = new TcpDataTransfer(ip, port);
+                    //Console.WriteLine("Enter the IP of the server to connect to");
+                    //ip = Console.ReadLine();
+                    client = new TcpDataTransfer("192.168.1.112", port);
                 }
                 Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
                 string input = Console.ReadLine();

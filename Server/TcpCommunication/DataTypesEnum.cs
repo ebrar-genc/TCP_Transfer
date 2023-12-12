@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Tcp_Client
+namespace TcpServer
 {
     #region DataTypes enum
     /// <summary>
@@ -20,7 +20,12 @@ namespace Tcp_Client
         /// <summary>
         /// Represents file data.
         /// </summary>
-        File
+        File,
+
+        /// <summary>
+        /// Represents content length data.
+        /// </summary>
+        ContentLength
     }
 
     #endregion

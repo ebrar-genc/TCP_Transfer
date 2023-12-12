@@ -10,12 +10,6 @@ namespace Tcp_Client
 {
     class InputAnalysis
     {
-        #region Parameters
-
-
-
-        #endregion
-
         #region Public
 
         /// <summary>
@@ -29,21 +23,23 @@ namespace Tcp_Client
         #region Public Function
 
         /// <summary>
-        /// Check whether it is string or file and call CreateHeader() function to prepare header.
+        /// Analyzes whether the input is a string or a file path, calls CreateHeader() to prepare the header,
+        /// combines the header and input value, and returns the final data in the PrepareSendData() function.
         /// </summary>
         /// <param name="input">The input string or file path.</param>
+        /// <returns>The final version of the data prepared for sending.</returns>
         public byte[] Analysis(string input)
         {
             byte[] finalBytes = null;
-            byte[] headerBytes = null;
+            //byte[] headerBytes = null;
 
             try
             {
                 if (IsValidPath(input))
-                    headerBytes = CreateHeader(input, DataTypes.File);
+                    finalBytes = CreateHeader(input, DataTypes.File);
                 else
-                    headerBytes = CreateHeader(input, DataTypes.String);
-                finalBytes = PrepareSendData(input, headerBytes);
+                    finalBytes = CreateHeader(input, DataTypes.String);
+                //finalBytes = PrepareSendData(input, headerBytes);
             }
             catch (Exception ex)
             {
@@ -52,6 +48,11 @@ namespace Tcp_Client
             return finalBytes;
         }
 
+        /// <summary>
+        /// Checks whether the provided input is a valid file path or directory.
+        /// </summary>
+        /// <param name="input">file path or directory.</param>
+        /// <returns>Returns true if the input is a valid path; otherwise, returns false.</returns>
         private bool IsValidPath(string input)
         {
             if (Path.IsPathRooted(input) && (File.Exists(input) || Directory.Exists(input)))
@@ -69,35 +70,70 @@ namespace Tcp_Client
         /// [packet type]+[filenameLength]+{File Name}+[fileSize (4 bytes)]
         /// </summary>
         /// <param name="input">The input string or file path.</param>
+        /// <param name="dataType">The type of data (String or File).</param>
+        /// <returns>The byte array representing the header.</returns>
         public byte[] CreateHeader(string input, DataTypes dataType)
         {
-            byte[] headerBytes = null; 
+            byte[] headerBytes = null;
+            byte[] finalBytes = null;
+            byte[] contentBytes = null;
+
 
             if (dataType == DataTypes.File)
             {
                 string inputName = Path.GetFileNameWithoutExtension(input);
-                headerBytes = new byte[inputName.Length + 2];
+
+                string fileContent = File.ReadAllText(input);
+                int fileContentLen = Encoding.UTF8.GetByteCount(fileContent);
+                contentBytes = BitConverter.GetBytes(fileContentLen);
+
+                headerBytes = new byte[inputName.Length + 9];
                 headerBytes[0] = (byte)dataType;
-                headerBytes[1] = (byte)input.Length;
+
+                byte[] headerLen = BitConverter.GetBytes(headerBytes.Length);
+                headerLen.CopyTo(headerBytes, 1); //1 2 3 4. byte'lara header uzunluğu yazacak
+
+                byte[] fileContentBytes = BitConverter.GetBytes(fileContentLen);
+                fileContentBytes.CopyTo(headerBytes, 5); //content uzunluğu
+
                 byte[] nameBytes = Encoding.UTF8.GetBytes(inputName);
-                nameBytes.CopyTo(headerBytes, 2);
+                nameBytes.CopyTo(headerBytes, 9); //5 ve gerisine dosya ismi
             }
             else if (dataType == DataTypes.String)
             {
                 headerBytes = new byte[5];
-                uint inputLen = (uint)input.Length;
+                int inputLen = input.Length;
                 headerBytes[0] = (byte)dataType;
-                BitConverter.GetBytes(inputLen).CopyTo(headerBytes, 1);
+
+                byte[] contentByte = BitConverter.GetBytes(inputLen);
+                contentByte.CopyTo(headerBytes, 1);//1 2 3 4. bytelara stringin buyukluğu
+
+                contentBytes = Encoding.UTF8.GetBytes(input);
+
             }
-            Debug.WriteLine("Client: Header Information:");
-            Debug.WriteLine(headerBytes);
-            return headerBytes;
+            finalBytes = new byte[contentBytes.Length + headerBytes.Length];
+            headerBytes.CopyTo(finalBytes, 0);
+            contentBytes.CopyTo(finalBytes, headerBytes.Length);
+            Debug.WriteLine("headerBytes length: " + headerBytes.Length);
+
+            return finalBytes;
         }
 
-        /// <summary>
+       
+        #endregion
+
+    }
+}
+
+
+
+/*
+ *  /// <summary>
         /// Combine header and input
         /// </summary>
         /// <param name="input">The input string or file path.</param>
+        /// <param name="headerBytes">The byte array representing the header.</param>
+        /// <returns>The final byte array prepared for transmission.</returns>
         private byte[] PrepareSendData(string input, byte[] headerBytes)
         {
             byte[] inputBytes = null;
@@ -107,14 +143,7 @@ namespace Tcp_Client
             finalBytes = new byte[inputBytes.Length + headerBytes.Length];
             headerBytes.CopyTo(finalBytes, 0);
             inputBytes.CopyTo(finalBytes, headerBytes.Length);
-            Console.WriteLine("png length: " + headerBytes.Length);
+            Debug.WriteLine("headerBytes length: " + headerBytes.Length);
             return finalBytes;
         }
-
-
-        #endregion
-
-    }
-}
-
-
+*/

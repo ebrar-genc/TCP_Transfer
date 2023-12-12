@@ -53,11 +53,12 @@ class TcpDataTransfer
         {
             if (Client != null && Client.Connected)
             {
+                Client.GetStream().Close(); // Close the stream first
                 Client.Close();
-                Client.Dispose();
                 Console.WriteLine("Disconnected from the server.");
             }
             Client = null;
+            ClientActive = false;
         }
         catch (Exception ex)
         {
@@ -68,38 +69,47 @@ class TcpDataTransfer
 
     #region Public Functions
 
-
+    /// <summary>
+    /// Sends the specified byte array to the server.
+    /// </summary>
+    /// <param name="finalBytes">The byte array to be sent.</param>
     public void SendBytes(byte[] finalBytes)
     {
-        int finalLength = finalBytes.Length;
-        try
+        if (Client != null && Client.Connected)
         {
-            NetworkStream stream = Client.GetStream();
-
-            if (finalLength <= Buffer)
+            try
             {
-                stream.Write(finalBytes, 0, finalLength);
-            }
-            else
-            {
-                //send in chunkd
-                int unsentBytes = finalLength;
-                int sentBytes = 0;
+                NetworkStream stream = Client.GetStream();
 
-                while (unsentBytes > 0)
+                int finalLength = finalBytes.Length;
+                if (finalLength <= Buffer)
                 {
-                    int len = Math.Min(unsentBytes, Buffer);
-                    stream.Write(finalBytes, sentBytes, len);
-                    unsentBytes -= len;
-                    sentBytes += len;
+                    stream.Write(finalBytes, 0, finalLength);
+                }
+                else
+                {
+                    // Send in chunks
+                    int unsentBytes = finalLength;
+                    int sentBytes = 0;
+
+                    while (unsentBytes > 0)
+                    {
+                        int len = Math.Min(unsentBytes, Buffer);
+                        stream.Write(finalBytes, sentBytes, len);
+                        unsentBytes -= len;
+                        sentBytes += len;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred while sending text: " + ex.Message);
+            }
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine("An error occurred while sending text: " + ex.Message);
+            Console.WriteLine("Client is not connected.");
         }
-
     }
 
     /// <summary>
