@@ -36,10 +36,11 @@ namespace Tcp_Client
             try
             {
                 if (IsValidPath(input))
-                    finalBytes = CreateHeader(input, DataTypes.File);
+                    finalBytes = CreateFileHeader(input, DataTypes.File);
                 else
-                    finalBytes = CreateHeader(input, DataTypes.String);
+                    finalBytes = CreateStringHeader(input, DataTypes.String);
                 //finalBytes = PrepareSendData(input, headerBytes);
+                
             }
             catch (Exception ex)
             {
@@ -65,56 +66,62 @@ namespace Tcp_Client
 
         #region Private Functions
 
-        /// <summary>
-        /// Prepare special headers for string and file. 
-        /// [packet type]+[filenameLength]+{File Name}+[fileSize (4 bytes)]
-        /// </summary>
-        /// <param name="input">The input string or file path.</param>
-        /// <param name="dataType">The type of data (String or File).</param>
-        /// <returns>The byte array representing the header.</returns>
-        public byte[] CreateHeader(string input, DataTypes dataType)
+
+        private byte[] CreateStringHeader(string input, DataTypes dataType)
         {
             byte[] headerBytes = null;
+            byte[] contentBytes = null;
             byte[] finalBytes = null;
+
+
+            Debug.WriteLine("hello string");
+            headerBytes = new byte[5];
+            int inputLen = input.Length;
+            headerBytes[0] = (byte)dataType;
+
+            byte[] contentByte = BitConverter.GetBytes(inputLen);
+            contentByte.CopyTo(headerBytes, 1);//1 2 3 4. bytelara stringin buyukluğu
+
+            contentBytes = Encoding.UTF8.GetBytes(input);
+
+            return CreateFinalBytes(headerBytes, contentBytes);
+
+        }
+
+        private byte[] CreateFileHeader(string input, DataTypes dataType)
+        {
+            byte[] headerBytes = null;
             byte[] contentBytes = null;
 
 
-            if (dataType == DataTypes.File)
-            {
-                Debug.WriteLine("hello file");
-                string inputName = Path.GetFileNameWithoutExtension(input);
+            Debug.WriteLine("hello filepath");
+            string inputName = Path.GetFileName(input);
 
-                string fileContent = File.ReadAllText(input);
-                int fileContentLen = fileContent.Length;
-                Debug.WriteLine("filecontentbytelen: " + fileContentLen);
+            string fileContent = File.ReadAllText(input);
+            int fileContentLen = fileContent.Length;
+            Debug.WriteLine("filecontentbytelen: " + fileContentLen);
 
-                contentBytes = Encoding.UTF8.GetBytes(fileContent);
+            contentBytes = Encoding.UTF8.GetBytes(fileContent);
 
-                headerBytes = new byte[inputName.Length + 9];
-                headerBytes[0] = (byte)dataType;
+            headerBytes = new byte[inputName.Length + 9];
+            headerBytes[0] = (byte)dataType;
 
-                byte[] headerLen = BitConverter.GetBytes(headerBytes.Length);
-                headerLen.CopyTo(headerBytes, 1); //1 2 3 4. byte'lara header uzunluğu yazacak
+            byte[] headerLen = BitConverter.GetBytes(headerBytes.Length);
+            headerLen.CopyTo(headerBytes, 1); //1 2 3 4. byte'lara header uzunluğu yazacak
 
-                byte[] fileContentBytes = BitConverter.GetBytes(fileContentLen);
-                fileContentBytes.CopyTo(headerBytes, 5); //5 6 7 8'econtent uzunluğu
+            byte[] fileContentBytes = BitConverter.GetBytes(fileContentLen);
+            fileContentBytes.CopyTo(headerBytes, 5); //5 6 7 8'econtent uzunluğu
 
-                byte[] nameBytes = Encoding.UTF8.GetBytes(inputName);
-                nameBytes.CopyTo(headerBytes, 9); //9 ve gerisine dosya ismi
-            }
-            else if (dataType == DataTypes.String)
-            {
-                Debug.WriteLine("hello string");
-                headerBytes = new byte[5];
-                int inputLen = input.Length;
-                headerBytes[0] = (byte)dataType;
+            byte[] nameBytes = Encoding.UTF8.GetBytes(inputName);
+            nameBytes.CopyTo(headerBytes, 9); //9 ve gerisine dosya ismi
 
-                byte[] contentByte = BitConverter.GetBytes(inputLen);
-                contentByte.CopyTo(headerBytes, 1);//1 2 3 4. bytelara stringin buyukluğu
+            return CreateFinalBytes(headerBytes, contentBytes);
+        }
 
-                contentBytes = Encoding.UTF8.GetBytes(input);
+        private byte[] CreateFinalBytes(byte[] headerBytes, byte[] contentBytes)
+        {
+            byte[] finalBytes = null;
 
-            }
             finalBytes = new byte[contentBytes.Length + headerBytes.Length];
             headerBytes.CopyTo(finalBytes, 0);
             contentBytes.CopyTo(finalBytes, headerBytes.Length);
@@ -123,11 +130,8 @@ namespace Tcp_Client
             Debug.WriteLine("headerBytes length: " + headerBytes.Length);
             Debug.WriteLine("finalBytes content: " + BitConverter.ToString(finalBytes));
 
-
             return finalBytes;
         }
-
-       
         #endregion
 
     }
