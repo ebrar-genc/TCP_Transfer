@@ -241,7 +241,7 @@ class Tcp_Server
     private void HandleReceivedData( byte[] contentByte)
     {
 
-        string savePath = "C:\\Users\\ebrar\\Desktop\\aa\\" + "ayn";
+        string savePath = "C:\\Users\\ebrar\\Desktop\\aa\\" + "ayn.jpg";
         Debug.WriteLine("Save Path: " + savePath);
         File.WriteAllBytes(savePath, contentByte);
         SendResponse(); 

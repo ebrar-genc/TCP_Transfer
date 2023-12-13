@@ -81,11 +81,14 @@ namespace Tcp_Client
 
             if (dataType == DataTypes.File)
             {
+                Debug.WriteLine("hello file");
                 string inputName = Path.GetFileNameWithoutExtension(input);
 
                 string fileContent = File.ReadAllText(input);
-                int fileContentLen = Encoding.UTF8.GetByteCount(fileContent);
-                contentBytes = BitConverter.GetBytes(fileContentLen);
+                int fileContentLen = fileContent.Length;
+                Debug.WriteLine("filecontentbytelen: " + fileContentLen);
+
+                contentBytes = Encoding.UTF8.GetBytes(fileContent);
 
                 headerBytes = new byte[inputName.Length + 9];
                 headerBytes[0] = (byte)dataType;
@@ -94,13 +97,14 @@ namespace Tcp_Client
                 headerLen.CopyTo(headerBytes, 1); //1 2 3 4. byte'lara header uzunluğu yazacak
 
                 byte[] fileContentBytes = BitConverter.GetBytes(fileContentLen);
-                fileContentBytes.CopyTo(headerBytes, 5); //content uzunluğu
+                fileContentBytes.CopyTo(headerBytes, 5); //5 6 7 8'econtent uzunluğu
 
                 byte[] nameBytes = Encoding.UTF8.GetBytes(inputName);
-                nameBytes.CopyTo(headerBytes, 9); //5 ve gerisine dosya ismi
+                nameBytes.CopyTo(headerBytes, 9); //9 ve gerisine dosya ismi
             }
             else if (dataType == DataTypes.String)
             {
+                Debug.WriteLine("hello string");
                 headerBytes = new byte[5];
                 int inputLen = input.Length;
                 headerBytes[0] = (byte)dataType;
@@ -114,7 +118,7 @@ namespace Tcp_Client
             finalBytes = new byte[contentBytes.Length + headerBytes.Length];
             headerBytes.CopyTo(finalBytes, 0);
             contentBytes.CopyTo(finalBytes, headerBytes.Length);
-            Debug.WriteLine("content stringg: " + BitConverter.ToString(contentBytes));
+            Debug.WriteLine("content stringg: " + Encoding.UTF8.GetString(contentBytes));
 
             Debug.WriteLine("headerBytes length: " + headerBytes.Length);
             Debug.WriteLine("finalBytes content: " + BitConverter.ToString(finalBytes));

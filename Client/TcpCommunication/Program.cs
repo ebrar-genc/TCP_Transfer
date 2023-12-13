@@ -8,6 +8,7 @@ using System.Security.AccessControl;
 using System.Security.Permissions;
 using System.Security;
 using Tcp_Client;
+using System.Diagnostics;
 
 
 class Program
@@ -63,6 +64,12 @@ class Program
                 else
                 {
                     byte[] data = inputAnalysis.Analysis(input);
+
+          
+
+                   
+
+
                     client.SendBytes(data);
                     if (flag == 1)
                         flag = 0;

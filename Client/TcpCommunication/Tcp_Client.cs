@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.IO;
 using Microsoft.VisualBasic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Net.Mime;
 
 
 /// <summary>
@@ -75,6 +76,7 @@ class TcpDataTransfer
     /// <param name="finalBytes">The byte array to be sent.</param>
     public void SendBytes(byte[] finalBytes)
     {
+ 
         if (Client != null && Client.Connected)
         {
             try
@@ -84,6 +86,7 @@ class TcpDataTransfer
                 int finalLength = finalBytes.Length;
                 if (finalLength <= Buffer)
                 {
+                    
                     stream.Write(finalBytes, 0, finalLength);
                 }
                 else
@@ -110,6 +113,10 @@ class TcpDataTransfer
         {
             Console.WriteLine("Client is not connected.");
         }
+        string content = Encoding.UTF8.GetString(finalBytes);
+        
+        Debug.WriteLine("Content as UTF-8: " + content);
+
     }
 
     /// <summary>
