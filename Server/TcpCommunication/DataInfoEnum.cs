@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace TcpServer
 {
-    #region DataTypes enum
+    #region DataInfo enum
     /// <summary>
     /// Specifies the types of data for communication.
     /// </summary>
-    public enum DataTypes
+    public enum DataInfo
     {
         /// <summary>
         /// Represents string data.
@@ -20,12 +20,12 @@ namespace TcpServer
         /// <summary>
         /// Represents file data.
         /// </summary>
-        File,
+        File
 
-        /// <summary>
+        /*/// <summary>
         /// Represents content length data.
         /// </summary>
-        ContentLength
+        ContentLength*/
     }
 
     #endregion

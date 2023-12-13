@@ -27,7 +27,7 @@ namespace TcpCommunication
                 string userInput = Console.ReadLine();
                 while (userInput != "quit!") { }
              
-                //server.Stop();
+                server.Stop();
             }   
         }
 

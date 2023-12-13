@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Net;
+using System.Net.Mime;
 using System.Net.Sockets;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TcpServer;
@@ -104,41 +107,66 @@ class Tcp_Server
         Header header = ParseHeader(headerName, stream);
         if (header != null)
         {
-            byte[] contentBytes = new byte[header.ContentLength];
-            stream.Read(contentBytes, 0, contentBytes.Length);
 
-            string content = Encoding.UTF8.GetString(contentBytes);
+            int unreadBytes = header.ContentLength;
+            byte[] contentByte = new byte[unreadBytes];
 
+            int readBytes = 0;
+            // byte[] contentByte = ReadContent(stream, header.ContentLength);
+            while (unreadBytes > 0)
+            {
+                Debug.WriteLine("unreadBytes: " + unreadBytes);
+                int len = Math.Min(unreadBytes, Buffer);
+                stream.Read(contentByte, readBytes, len);
+                unreadBytes -= len;
+                readBytes += len;
+                Debug.WriteLine("readBytes: " + readBytes);
+
+
+            }
+            string content = Encoding.UTF8.GetString(contentByte);
+            Debug.WriteLine("content's information: " + content);
+            if (header.DataInfo == DataInfo.File)
+            {
+                HandleReceivedData(contentByte);
+            }
             return new Message { Header = header, Content = content };
+
         }
         return null;
     }
 
     private Header ParseHeader(byte[] headerBytes, NetworkStream stream)
     {
-        DataTypes dataType = (DataTypes)headerBytes[0];
-
-        if (dataType == DataTypes.String)
+        DataInfo dataInfo = (DataInfo)headerBytes[0];
+        if (dataInfo == DataInfo.String)
         {
-            int contentLen = BitConverter.ToInt32(headerBytes, 1);
-            return new Header { DataType = dataType, ContentLength = contentLen };//sıradaki contentlen kadar gelen string
+            int contentLength = BitConverter.ToInt32(headerBytes, 1);
+            Debug.WriteLine("contentlen: " + contentLength);
+
+            return new Header { DataInfo = dataInfo, ContentLength = contentLength, ContentName = "str" };//sırada okunacak bytelar: contentlen kadar gelen string
         }
-        else if (dataType == DataTypes.File)
+        else if (dataInfo == DataInfo.File)
         {
-            //başlık uzunluğu
+            //TOTAL HEADER LENGTH
             int headerLen = BitConverter.ToInt32(headerBytes, 1);
+            Debug.WriteLine("total headerLen: " + headerLen);
 
-            // Başlığı oku
+
+            // Length of incoming data
             byte[] contentByte = new byte[4];
             stream.Read(contentByte, 0, contentByte.Length);
             int contentLen = BitConverter.ToInt32(contentByte, 0);
+            Debug.WriteLine("incoming data length: " + contentLen);
 
-            // Dosya ismini oku(headerLen - contentLen(4byte) - 5byte)
+
+            // FileName = (headerLen - contentLen(4byte) - 5byte)
             byte[] fileNameBytes = new byte[headerLen - 9];
             stream.Read(fileNameBytes, 0, fileNameBytes.Length);
             string fileName = Encoding.UTF8.GetString(fileNameBytes);
+            Debug.WriteLine("Filename: " + fileName);
 
-            return new Header { DataType = dataType, ContentLength = contentLen, FileName = fileName };
+            return new Header { DataInfo = dataInfo, ContentLength = contentLen, ContentName = fileName, SavePath = "C:\\Users\\ebrar\\Desktop\\aa" + "selammm" };
         }
         return null;
     }
@@ -159,14 +187,10 @@ class Tcp_Server
                 Message receivedMessage = ReadMessage(stream);
                 if (receivedMessage != null)
                 {
-                    Console.WriteLine("Received data type: " + receivedMessage.Header.DataType);
-                    Console.WriteLine("Received content length: " + receivedMessage.Header.ContentLength);
-                    Console.WriteLine("Received file name: " + receivedMessage.Header.FileName);
-                    Console.WriteLine("Received data: " + receivedMessage.Content);
-
-                    byte[] contentByte = ReadContent(stream, receivedMessage.Header.ContentLength);
-
-                    HandleReceivedData(receivedMessage, contentByte);
+                    Debug.WriteLine("Received data type: " + receivedMessage.Header.DataInfo);
+                    Debug.WriteLine("Received content length: " + receivedMessage.Header.ContentLength);
+                    Debug.WriteLine("Received data name: " + receivedMessage.Header.ContentName);
+                    //Debug.WriteLine("Received message: " + receivedMessage.ContentByte);
                 }
                 else
                 {
@@ -183,59 +207,44 @@ class Tcp_Server
 
     private byte[] ReadContent(NetworkStream stream, int contentLength)
     {
-        Console.WriteLine("111");
         byte[] contentByte = new byte[contentLength];
 
-        if (contentLength <= Buffer)
-        {
-            Console.WriteLine("222");
-            Console.WriteLine(contentByte.Length);
-
-            stream.Read(contentByte, 0, contentByte.Length);
-            Console.WriteLine("777");
-
-        }
-        else
-        {
-            Console.WriteLine("333");
-
-            // Send in chunks
-            int unreadBytes = contentLength;
-            int readBytes = 0;
-            Console.WriteLine("444");
+         if (contentLength <= Buffer)
+         {
+             Debug.WriteLine("contentbyte Length: " + contentLength);
+             stream.Read(contentByte, 0, contentByte.Length);
+             string readContent = Encoding.UTF8.GetString(contentByte);
+             Debug.WriteLine("read data content: " + readContent);
+         }
+         else
+         {
+             // Send in chunks
+             int unreadBytes = contentLength;
+             int readBytes = 0;
 
             while (unreadBytes > 0)
             {
-                Console.WriteLine("555");
-
+                Debug.WriteLine("unreadBytes: " + unreadBytes);
                 int len = Math.Min(unreadBytes, Buffer);
                 stream.Read(contentByte, readBytes, len);
                 unreadBytes -= len;
                 readBytes += len;
+                Debug.WriteLine("readBytes: " + readBytes);
+
             }
         }
-        Console.WriteLine("666");
-        Console.WriteLine(contentByte.ToString);
-
-
+        string content = Encoding.UTF8.GetString(contentByte);
+        Debug.WriteLine("content's information: " + contentByte);
         return contentByte;
     }
 
-    private void HandleReceivedData(Message receivedMessage, byte[] contentByte)
+    private void HandleReceivedData( byte[] contentByte)
     {
-        if (receivedMessage.Header.DataType == DataTypes.String)
-        {
-            string message = Encoding.UTF8.GetString(contentByte, 0, contentByte.Length);
-            Console.WriteLine("Message Received! ---> " + message);
-        }
-        else if (receivedMessage.Header.DataType == DataTypes.File)
-        {
-            string savePath = "\"C:\\Users\\ebrar\\Desktop\\aa\\selam.txt.txt\"";
-            Console.WriteLine("here");
-            File.WriteAllBytes(savePath, contentByte);
-        }
 
-        SendResponse();
+        string savePath = "C:\\Users\\ebrar\\Desktop\\aa\\" + "ayn";
+        Debug.WriteLine("Save Path: " + savePath);
+        File.WriteAllBytes(savePath, contentByte);
+        SendResponse(); 
     }
 
 

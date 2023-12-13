@@ -114,7 +114,11 @@ namespace Tcp_Client
             finalBytes = new byte[contentBytes.Length + headerBytes.Length];
             headerBytes.CopyTo(finalBytes, 0);
             contentBytes.CopyTo(finalBytes, headerBytes.Length);
+            Debug.WriteLine("content stringg: " + BitConverter.ToString(contentBytes));
+
             Debug.WriteLine("headerBytes length: " + headerBytes.Length);
+            Debug.WriteLine("finalBytes content: " + BitConverter.ToString(finalBytes));
+
 
             return finalBytes;
         }

@@ -14,7 +14,7 @@ namespace TcpServer
         /// <summary>
         /// Gets or sets the type of data in the message.
         /// </summary>
-        public DataTypes DataType { get; set; }
+        public DataInfo DataInfo { get; set; }
 
         /// <summary>
         /// Gets or sets the length of the content in the message.
@@ -24,6 +24,8 @@ namespace TcpServer
         /// <summary>
         /// Gets or sets the file name. (only for file data type).
         /// </summary>
-        public string FileName { get; set; }
+        public string ContentName { get; set; }
+
+        public string SavePath { get; set; }
     }
 }
