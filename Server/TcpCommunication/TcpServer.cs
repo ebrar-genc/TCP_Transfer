@@ -63,9 +63,17 @@ class Tcp_Server
             while (true)
             {
                 Client = await TcpListener.AcceptTcpClientAsync();
-                ClientConnected = true;
-                Console.WriteLine(i++ + ". client is connected! ");
-                ReceiveBytes();
+                if (Client != null)
+                {
+                    ClientConnected = true;
+                    Console.WriteLine(i++ + ". client is connected! ");
+                    ReceiveBytes();
+                }
+                else
+                {
+                    Console.WriteLine("Failed to acceptTTT client connection.");
+                    break;
+                }
             }
         }
         catch (Exception ex)
@@ -81,19 +89,23 @@ class Tcp_Server
     {
         try
         {
+            if (Client != null && Client.Connected)
+            {
+                ClientConnected = false;
+                Client.Close();
+                Client = null;
+            }
 
-            ClientConnected = false;
-            Client.Close();
-            Client = null;
-
-            ListenerActive = false;
-            TcpListener.Stop();
-            TcpListener = null;
-
+            if (TcpListener != null && ListenerActive)
+            {
+                ListenerActive = false;
+                TcpListener.Stop();
+                TcpListener = null;
+            }
         }
         catch (Exception e)
         {
-            Debug.WriteLine("Failed to Stop server! : " + e.ToString());
+            Console.WriteLine("Failed to stop the server: " + e.ToString());
         }
     }
     #endregion
@@ -241,10 +253,11 @@ class Tcp_Server
     private void HandleReceivedData( byte[] contentByte)
     {
 
-        string savePath = "C:\\Users\\ebrar\\Desktop\\aa\\" + "ayn.jpg";
+        string savePath = "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Server\\" + "ayn.zip";
         Debug.WriteLine("Save Path: " + savePath);
         File.WriteAllBytes(savePath, contentByte);
         SendResponse(); 
+
     }
 
 

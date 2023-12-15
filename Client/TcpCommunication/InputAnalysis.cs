@@ -97,11 +97,9 @@ namespace Tcp_Client
             Debug.WriteLine("hello filepath");
             string inputName = Path.GetFileName(input);
 
-            string fileContent = File.ReadAllText(input);
+            byte[] fileContent = File.ReadAllBytes(input);
             int fileContentLen = fileContent.Length;
             Debug.WriteLine("filecontentbytelen: " + fileContentLen);
-
-            contentBytes = Encoding.UTF8.GetBytes(fileContent);
 
             headerBytes = new byte[inputName.Length + 9];
             headerBytes[0] = (byte)dataType;
@@ -115,7 +113,7 @@ namespace Tcp_Client
             byte[] nameBytes = Encoding.UTF8.GetBytes(inputName);
             nameBytes.CopyTo(headerBytes, 9); //9 ve gerisine dosya ismi
 
-            return CreateFinalBytes(headerBytes, contentBytes);
+            return CreateFinalBytes(headerBytes, fileContent);
         }
 
         private byte[] CreateFinalBytes(byte[] headerBytes, byte[] contentBytes)

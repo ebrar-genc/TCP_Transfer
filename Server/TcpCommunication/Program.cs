@@ -11,8 +11,8 @@ namespace TcpCommunication
     {   
         static void Main()
         {
-            string serverIp = GetServerIp();
-            Tcp_Server server = new Tcp_Server(serverIp, 3001);
+         //   string serverIp = GetServerIp();
+            Tcp_Server server = new Tcp_Server("127.0.0.1", 3001);
             try
             {
                 server.Start();
@@ -31,7 +31,7 @@ namespace TcpCommunication
             }   
         }
 
-        static string GetServerIp()
+       /* static string GetServerIp()
         {
             try
             {
@@ -54,6 +54,6 @@ namespace TcpCommunication
                 Debug.WriteLine("Failed to get IPv4 address:" + e.ToString());
                 return null;
             }
-        }
+        }*/
     }
 }

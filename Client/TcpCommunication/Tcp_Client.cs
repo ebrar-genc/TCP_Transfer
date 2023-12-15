@@ -42,7 +42,6 @@ class TcpDataTransfer
         IpAddress = ipAddress;
         Port = port;
         Buffer = 1024 * 64;
-        Connect();
     }
 
     /// <summary>
@@ -76,17 +75,15 @@ class TcpDataTransfer
     /// <param name="finalBytes">The byte array to be sent.</param>
     public void SendBytes(byte[] finalBytes)
     {
- 
-        if (Client != null && Client.Connected)
+        try
         {
-            try
+            if (Client != null && Client.Connected)
             {
                 NetworkStream stream = Client.GetStream();
 
                 int finalLength = finalBytes.Length;
                 if (finalLength <= Buffer)
                 {
-                    
                     stream.Write(finalBytes, 0, finalLength);
                 }
                 else
@@ -104,20 +101,20 @@ class TcpDataTransfer
                     }
                 }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine("An error occurred while sending text: " + ex.Message);
+                Console.WriteLine("Client is not connected.");
             }
-        }
-        else
-        {
-            Console.WriteLine("Client is not connected.");
-        }
-        string content = Encoding.UTF8.GetString(finalBytes);
-        
-        Debug.WriteLine("Content as UTF-8: " + content);
 
+            string content = Encoding.UTF8.GetString(finalBytes);
+            Debug.WriteLine("Content as UTF-8: " + content);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("!!!!An error occurred while sending data: " + ex.Message);
+        }
     }
+
 
     /// <summary>
     /// Reads the server's response.
@@ -135,8 +132,8 @@ class TcpDataTransfer
         }
         catch (Exception ex)
         {
-            Console.WriteLine("aaAn error occurred while receiving response: " + ex.Message);
-            Console.WriteLine("aaaAn error occurred while receiving response: " + ex.ToString());
+            Console.WriteLine("****aaAn error occurred while receiving response: " + ex.Message);
+            Console.WriteLine("****aaaAn error occurred while receiving response: " + ex.ToString());
 
         }
     }
@@ -148,7 +145,7 @@ class TcpDataTransfer
     /// <summary>
     /// Connects to the server.
     /// </summary>
-    private void Connect()
+    public void Connect(byte[] data)
     {
         try
         {
@@ -161,6 +158,7 @@ class TcpDataTransfer
         {
             Debug.WriteLine("Error connecting to the server: " + ex.Message);
         }
+        SendBytes(data);
     }
     #endregion
 }

@@ -28,7 +28,7 @@ class Program
         Console.WriteLine("Enter the IP of the server to connect to");
         //ip = Console.ReadLine();
 
-        TcpDataTransfer client = new TcpDataTransfer("192.168.1.112", port);
+        TcpDataTransfer client = new TcpDataTransfer("127.0.0.1", port);
         InputAnalysis inputAnalysis = new InputAnalysis();
 
         try
@@ -39,7 +39,7 @@ class Program
                 {
                     //Console.WriteLine("Enter the IP of the server to connect to");
                     //ip = Console.ReadLine();
-                    client = new TcpDataTransfer("192.168.1.112", port);
+                    client = new TcpDataTransfer("127.0.0.1", port);
                 }
                 Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
                 string input = Console.ReadLine();
@@ -65,12 +65,8 @@ class Program
                 {
                     byte[] data = inputAnalysis.Analysis(input);
 
-          
 
-                   
-
-
-                    client.SendBytes(data);
+                    client.Connect(data);
                     if (flag == 1)
                         flag = 0;
                 }
