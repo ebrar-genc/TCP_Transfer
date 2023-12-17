@@ -24,8 +24,7 @@ namespace TcpServer
         /// <summary>
         /// Gets or sets the file name. (only for file data type).
         /// </summary>
-        public string ContentName { get; set; }
+        public string FileName { get; set; }
 
-        public string SavePath { get; set; }
     }
 }

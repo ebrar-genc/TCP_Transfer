@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Server\\TcpCommunication\\TcpServer.csproj": {}
+    "C:\\Users\\gence\\Documents\\GitHub\\MARS\\Server\\TcpCommunication\\TcpServer.csproj": {}
   },
   "projects": {
-    "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Server\\TcpCommunication\\TcpServer.csproj": {
+    "C:\\Users\\gence\\Documents\\GitHub\\MARS\\Server\\TcpCommunication\\TcpServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Server\\TcpCommunication\\TcpServer.csproj",
+        "projectUniqueName": "C:\\Users\\gence\\Documents\\GitHub\\MARS\\Server\\TcpCommunication\\TcpServer.csproj",
         "projectName": "TcpServer",
-        "projectPath": "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Server\\TcpCommunication\\TcpServer.csproj",
+        "projectPath": "C:\\Users\\gence\\Documents\\GitHub\\MARS\\Server\\TcpCommunication\\TcpServer.csproj",
         "packagesPath": "C:\\Users\\gence\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Server\\TcpCommunication\\obj\\",
+        "outputPath": "C:\\Users\\gence\\Documents\\GitHub\\MARS\\Server\\TcpCommunication\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\gence\\AppData\\Roaming\\NuGet\\NuGet.Config",

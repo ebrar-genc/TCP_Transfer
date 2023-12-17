@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Client\\TcpCommunication\\TcpClient.csproj": {}
+    "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Client\\TcpCommunication\\TcpClient.csproj": {
+    "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Client\\TcpCommunication\\TcpClient.csproj",
+        "projectUniqueName": "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj",
         "projectName": "TcpClient",
-        "projectPath": "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Client\\TcpCommunication\\TcpClient.csproj",
+        "projectPath": "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj",
         "packagesPath": "C:\\Users\\gence\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Client\\TcpCommunication\\obj\\",
+        "outputPath": "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\gence\\AppData\\Roaming\\NuGet\\NuGet.Config",

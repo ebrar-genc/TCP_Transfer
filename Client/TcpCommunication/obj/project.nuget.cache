@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4pUDNpvH0/YqbGAVUB27Wb9sR9K6UwoQGtPwW74tAxYI1u7IJnvT/91M/GEyvyuq2M2xV0mSfemfSPbB2Y2fXw==",
+  "dgSpecHash": "iFvVWGMQS1lsdYMt6QoiED3IwQcOY4ShVHxC9NDnWx5sY4m2+pE+m2DZZCsncltmgtifQkMUjbpSDKvXo27Lkw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\gence\\Desktop\\MARS-main (2)\\MARS-main\\Client\\TcpCommunication\\TcpClient.csproj",
+  "projectFilePath": "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

@@ -54,3 +54,17 @@ C:\Users\gence\Desktop\MARS-main (2)\MARS-main\Client\TcpCommunication\obj\Debug
 C:\Users\gence\Desktop\MARS-main (2)\MARS-main\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.pdb
 C:\Users\gence\Desktop\MARS-main (2)\MARS-main\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.genruntimeconfig.cache
 C:\Users\gence\Desktop\MARS-main (2)\MARS-main\Client\TcpCommunication\obj\Debug\net8.0\ref\TcpClient.dll
+C:\Users\gence\Desktop\Client\TcpCommunication\bin\Debug\net8.0\TcpClient.exe
+C:\Users\gence\Desktop\Client\TcpCommunication\bin\Debug\net8.0\TcpClient.deps.json
+C:\Users\gence\Desktop\Client\TcpCommunication\bin\Debug\net8.0\TcpClient.runtimeconfig.json
+C:\Users\gence\Desktop\Client\TcpCommunication\bin\Debug\net8.0\TcpClient.dll
+C:\Users\gence\Desktop\Client\TcpCommunication\bin\Debug\net8.0\TcpClient.pdb
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.AssemblyInfoInputs.cache
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.AssemblyInfo.cs
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.csproj.CoreCompileInputs.cache
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.dll
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\refint\TcpClient.dll
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.pdb
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\TcpClient.genruntimeconfig.cache
+C:\Users\gence\Desktop\Client\TcpCommunication\obj\Debug\net8.0\ref\TcpClient.dll
