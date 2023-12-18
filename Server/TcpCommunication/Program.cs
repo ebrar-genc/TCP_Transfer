@@ -11,18 +11,13 @@ namespace TcpCommunication
     {   
         static void Main()
         {
-         //   string serverIp = GetServerIp();
-            Tcp_Server server = new Tcp_Server("127.0.0.1", 3001);
+            string serverIp = GetServerIp();
+            Tcp_Server server = new Tcp_Server(serverIp, 3001);
+
             try
             {
                 server.Start();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("An error occurred while starting the server. " + ex.Message);
-            }
-            finally
-            {
+
                 Console.WriteLine("Press 'Esc' to stop the server...");
 
                 while (true)
@@ -38,12 +33,18 @@ namespace TcpCommunication
                         }
                     }
                 }
-
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred while starting the server. " + ex.Message);
+            }
+            finally
+            {
                 server.Stop();
             }   
         }
 
-       /* static string GetServerIp()
+        static string GetServerIp()
         {
             try
             {
@@ -66,6 +67,6 @@ namespace TcpCommunication
                 Debug.WriteLine("Failed to get IPv4 address:" + e.ToString());
                 return null;
             }
-        }*/
+        }
     }
 }

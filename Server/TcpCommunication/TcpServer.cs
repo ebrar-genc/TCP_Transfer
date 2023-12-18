@@ -1,20 +1,6 @@
-<<<<<<< HEAD
 ﻿using System.Diagnostics;
-=======
-﻿using System;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
 using System.Net;
 using System.Net.Sockets;
-<<<<<<< HEAD
-=======
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
 using System.Text;
 using TcpServer;
 
@@ -46,14 +32,7 @@ class Tcp_Server
     {
         IpAddress = ipAddress;
         Port = port;
-<<<<<<< HEAD
         Buffer = 1024 * 64;
-=======
-        Buffer = 1024 * 8;
-        DataLength = 0;
-        LeftData = "";
-        ServerActive = true;
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
     }
 
     /// <summary>
@@ -80,11 +59,7 @@ class Tcp_Server
                 }
                 else
                 {
-<<<<<<< HEAD
                     Console.WriteLine("Failed to accept client connection.");
-=======
-                    Console.WriteLine("Failed to acceptTTT client connection.");
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
                     break;
                 }
             }
@@ -121,84 +96,11 @@ class Tcp_Server
             Console.WriteLine("Failed to stop the server: " + e.ToString());
         }
     }
-
-<<<<<<< HEAD
-    #region Private Functions
-
-=======
-    public Message ReadMessage(NetworkStream stream)
-    {
-        byte[] headerType = new byte[5];
-        stream.Read(headerType, 0, headerType.Length);
-
-        Header header = ParseHeader(headerType, stream);
-        if (header != null)
-        {
-            if (header.DataInfo == DataInfo.File)
-            {
-                Buffer = 1024 * 64;
-            }
-            Debug.WriteLine("Buffer: " + Buffer);
-
-            int unreadBytes = header.ContentLength;
-            byte[] contentByte = new byte[unreadBytes];
-            int readBytes = 0;
-
-            while (unreadBytes > 0)
-            {
-                int len = Math.Min(unreadBytes, Buffer);
-                stream.Read(contentByte, readBytes, len);
-                unreadBytes -= len;
-                readBytes += len;
-                Debug.WriteLine("readBytes: " + readBytes);
-            }
-            return new Message { Header = header, ContentByte = contentByte };
-
-        }
-        return null;
-    }
     #endregion
 
 
-
-
-
-
     #region Private Functions
 
-    private Header ParseHeader(byte[] headerType, NetworkStream stream)
-    {
-        DataInfo dataInfo = (DataInfo)headerType[0];
-        if (dataInfo == DataInfo.String)
-        {
-            //1 2 3 4 byte = int ==> headerBytes[5] 
-            int contentLength = BitConverter.ToInt32(headerType, 1);
-            //sırada okunacak bytelar: contentlen kadar gelen string
-
-            return new Header { DataInfo = dataInfo, ContentLength = contentLength, FileName = "str" };
-        }
-        else if (dataInfo == DataInfo.File)
-        {
-            //TOTAL HEADER LENGTH = 4 BYTE
-            int totalHeaderLen = BitConverter.ToInt32(headerType, 1);
-
-            // Length of incoming data --> NEXT 4 BYTE
-            byte[] contentByte = new byte[4];
-            stream.Read(contentByte, 0, contentByte.Length);
-            int contentLen = BitConverter.ToInt32(contentByte, 0);
-            Debug.WriteLine("Received content length: " + contentLen);
-
-            // FileName = (totalHeaderLen - headerType[5] - contentByte(4))
-            byte[] fileNameBytes = new byte[totalHeaderLen - 9];
-            stream.Read(fileNameBytes, 0, fileNameBytes.Length);
-            string fileName = Encoding.UTF8.GetString(fileNameBytes);
-
-            return new Header { DataInfo = dataInfo, ContentLength = contentLen, FileName = "\\" + fileName};
-        }
-        return null;
-    }
-
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
     /// <summary>
     /// The incoming information is first divided into pieces. ProcessMessage() is then sent for processing
     /// </summary>
@@ -211,15 +113,7 @@ class Tcp_Server
                 Message receivedMessage = ReadMessage(stream);
                 if (receivedMessage != null)
                 {
-<<<<<<< HEAD
                     ProcessMessage(receivedMessage);
-=======
-                    if (receivedMessage.Header.DataInfo == DataInfo.File)
-                    {
-                        SavePath(Message receivedMessage);
-                    }
-                    HandleReceivedData(receivedMessage);
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
                 }
                 else
                 {
@@ -264,7 +158,6 @@ class Tcp_Server
         return null;
     }
 
-<<<<<<< HEAD
     /// <summary>
     /// Parses the header information from the network stream.
     /// </summary>
@@ -301,35 +194,6 @@ class Tcp_Server
             return new Header { DataInfo = dataInfo, ContentLength = contentLen, FileName = "\\" + fileName};
         }
         return null;
-=======
-    private void HandleReceivedData(Message receivedMessage)
-    {
-        bool validPath = false;
-
-
-        //string content = Encoding.UTF8.GetString(receivedMessage.ContentByte);
-
-        //!!!waiting
-        while (!validPath)
-        {
-            Console.WriteLine("Enter the path where you want to save your file:");
-            string savePath = Console.ReadLine();
-
-            if (Path.IsPathRooted(savePath) && Directory.Exists(savePath))
-            {
-                string save = savePath + receivedMessage.Header.FileName;
-
-                Console.WriteLine("Save Path: " + save);
-                File.WriteAllBytes(save, contentByte);
-                SendResponse();
-                validPath = true;
-            }
-            else
-            {
-                Console.WriteLine("Please enter a valid path.");
-            }
-        }
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
     }
 
     /// <summary>
@@ -352,7 +216,6 @@ class Tcp_Server
         SendResponse();
     }
 
-
     /// <summary>
     /// Sends a response to the client through stream.
     /// </summary>
@@ -371,15 +234,11 @@ class Tcp_Server
         }
     }
 
-<<<<<<< HEAD
     /// <summary>
     /// Obtains and validates the save path for file messages.
     /// </summary>
     /// <param name="message">The file message containing information about the file to be saved.</param>
     private void GetSavePath(Message message)
-=======
-    private void SavePath(Message message)
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
     {
         bool validPath = false;
 
@@ -391,10 +250,6 @@ class Tcp_Server
             if (Path.IsPathRooted(save) && Directory.Exists(save))
             {
                 string savePath = save + message.Header.FileName;
-<<<<<<< HEAD
-=======
-                Debug.WriteLine("Save Path: " + savePath);
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
                 message.SavePath = savePath;
                 validPath = true;
             }
@@ -404,9 +259,5 @@ class Tcp_Server
             }
         }
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
     #endregion
 }

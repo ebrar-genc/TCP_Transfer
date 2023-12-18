@@ -8,19 +8,19 @@
     "net8.0": []
   },
   "packageFolders": {
-    "C:\\Users\\gence\\.nuget\\packages\\": {}
+    "C:\\Users\\ebrar\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj",
+      "projectUniqueName": "C:\\Users\\ebrar\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj",
       "projectName": "TcpClient",
-      "projectPath": "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj",
-      "packagesPath": "C:\\Users\\gence\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\gence\\Desktop\\Client\\TcpCommunication\\obj\\",
+      "projectPath": "C:\\Users\\ebrar\\Desktop\\Client\\TcpCommunication\\TcpClient.csproj",
+      "packagesPath": "C:\\Users\\ebrar\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\ebrar\\Desktop\\Client\\TcpCommunication\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\gence\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ebrar\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [

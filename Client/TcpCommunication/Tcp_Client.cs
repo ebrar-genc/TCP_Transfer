@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -10,9 +11,9 @@ class TcpDataTransfer
     #region Parameters;
 
     private TcpClient Client;
+    public bool ClientActive = false;
     private string IpAddress;
     private int Port;
-    public bool ClientActive = false;
 
     #endregion
 
@@ -27,134 +28,43 @@ class TcpDataTransfer
     {
         IpAddress = ipAddress;
         Port = port;
-<<<<<<< HEAD
-        Connect();
+        try
+        {
+            Client = new TcpClient();
+            Console.WriteLine("Connected to server");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("An error occurred while creating TcpClient: " + ex.Message);
+        }
+        finally
+        {
+            Connect();
+        }
+        
     }
 
     /// <summary>
     /// Connects to the server.
     /// </summary>
     public void Connect()
-=======
-        Buffer = 1024 * 64;
-    }
-
-    /// <summary>
-    /// Disconnects from the server and releases resources.
-    /// </summary>
-    public void Disconnect()
     {
         try
         {
-            if (Client != null && Client.Connected)
-            {
-                Client.GetStream().Close(); // Close the stream first
-                Client.Close();
-                Console.WriteLine("Disconnected from the server.");
-            }
-            Client = null;
-            ClientActive = false;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("An error occurred while disconnecting: " + ex.Message);
-        }
-    }
-    #endregion
-
-    #region Public Functions
-
-    /// <summary>
-    /// Sends the specified byte array to the server.
-    /// </summary>
-    /// <param name="finalBytes">The byte array to be sent.</param>
-    public void SendBytes(byte[] finalBytes)
-    {
-        try
-        {
-            if (Client != null && Client.Connected)
-            {
-                NetworkStream stream = Client.GetStream();
-
-                int finalLength = finalBytes.Length;
-                if (finalLength <= Buffer)
-                {
-                    stream.Write(finalBytes, 0, finalLength);
-                }
-                else
-                {
-                    // Send in chunks
-                    int unsentBytes = finalLength;
-                    int sentBytes = 0;
-
-                    while (unsentBytes > 0)
-                    {
-                        int len = Math.Min(unsentBytes, Buffer);
-                        stream.Write(finalBytes, sentBytes, len);
-                        unsentBytes -= len;
-                        sentBytes += len;
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine("Client is not connected.");
-            }
-
-            string content = Encoding.UTF8.GetString(finalBytes);
-            Debug.WriteLine("Content as UTF-8: " + content);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("!!!!An error occurred while sending data: " + ex.Message);
-        }
-    }
-
-
-    /// <summary>
-    /// Reads the server's response.
-    /// </summary>
-    /// <param name="stream">The NetworkStream used for reading.</param>
-    public void ReadResponse()
-    {
-        try
-        {
-            NetworkStream stream = Client.GetStream();
-            byte[] responseByte = new byte[1024];
-            int bytesRead = stream.Read(responseByte, 0, responseByte.Length);
-            string message = Encoding.UTF8.GetString(responseByte, 0, bytesRead);
-            Console.WriteLine(message);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("****aaAn error occurred while receiving response: " + ex.Message);
-            Console.WriteLine("****aaaAn error occurred while receiving response: " + ex.ToString());
-
-        }
-    }
-
-    #endregion
-
-    #region Private Functions
-
-    /// <summary>
-    /// Connects to the server.
-    /// </summary>
-    public void Connect(byte[] data)
->>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
-    {
-        try
-        {
-            Client = new TcpClient();
             Client.Connect(IpAddress, Port);
             ClientActive = true;
-            Console.WriteLine("Connected to server");
+            if (Client.Connected)
+            {
+                Console.WriteLine("hello");
+            }
+            else
+                Console.WriteLine("mlsf");
+
         }
         catch (Exception ex)
         {
             Debug.WriteLine("Error connecting to the server: " + ex.Message);
         }
-        SendBytes(data);
     }
 
     /// <summary>
@@ -192,35 +102,54 @@ class TcpDataTransfer
     {
         try
         {
-            if (Client != null && Client.Connected)
+            using NetworkStream stream = Client.GetStream();
             {
-                using NetworkStream stream = Client.GetStream();
-                {
-                    /// The buffer size for data transmission.
-                    int buffer = 1024 * 64;
-                    // Send in chunks
-                    int unsentBytes = data.Length;
-                    int sentBytes = 0;
+                int buffer = 1024 * 64;
+                int unsentBytes = data.Length;
+                int sentBytes = 0;
 
-                    while (unsentBytes > 0)
-                    {
-                        int len = Math.Min(unsentBytes, buffer);
-                        stream.Write(data, sentBytes, len);
-                        unsentBytes -= len;
-                        sentBytes += len;
-                    }
-                    ReadServerResponse();
+                while (unsentBytes > 0)
+                {
+                    int len = Math.Min(unsentBytes, buffer);
+                    stream.Write(data, sentBytes, len);
+                    unsentBytes -= len;
+                    sentBytes += len;
                 }
-            }
-            else
-            {
-                Console.WriteLine("Client is not connected.");
+
+                ReadServerResponse();
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine("An error occurred while sending data: " + ex.Message);
         }
+
+        /*if (Client != null && Client.Connected)
+        {
+            using NetworkStream stream = Client.GetStream();
+            {
+                /// The buffer size for data transmission.
+                int buffer = 1024 * 64;
+                // Send in chunks
+                int unsentBytes = data.Length;
+                int sentBytes = 0;
+
+                while (unsentBytes > 0)
+                {
+                    int len = Math.Min(unsentBytes, buffer);
+                    stream.Write(data, sentBytes, len);
+                    unsentBytes -= len;
+                    sentBytes += len;
+                }
+                ReadServerResponse();
+            }
+        }
+        else
+        {
+            Console.WriteLine("Client is not connected.");
+        }
+    }*/
+        
     }
     #endregion
 
