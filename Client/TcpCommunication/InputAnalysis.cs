@@ -87,6 +87,7 @@ namespace Tcp_Client
             /// [1,2,3,4] = inputLength
             inputByte.CopyTo(headerBytes, 1);
 
+<<<<<<< HEAD
             return headerBytes;
         }
 
@@ -102,6 +103,14 @@ namespace Tcp_Client
             Debug.WriteLine("filecontentbytelen: " + dataLen);
 
             byte[] headerBytes = new byte[fileName.Length + 9];
+=======
+            byte[] fileContent = File.ReadAllBytes(input);
+            int fileContentLen = fileContent.Length;
+            Debug.WriteLine("filecontentbytelen: " + fileContentLen);
+
+            headerBytes = new byte[inputName.Length + 9];
+            headerBytes[0] = (byte)dataType;
+>>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
 
             /// [0] = dataType
             headerBytes[0] = (byte)DataTypes.File;
@@ -118,7 +127,11 @@ namespace Tcp_Client
             byte[] nameBytes = Encoding.UTF8.GetBytes(fileName);
             nameBytes.CopyTo(headerBytes, 9);
 
+<<<<<<< HEAD
             return headerBytes;
+=======
+            return CreateFinalBytes(headerBytes, fileContent);
+>>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
         }
 
         /// <summary>

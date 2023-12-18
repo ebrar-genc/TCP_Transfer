@@ -38,8 +38,13 @@ class Program
             {
                 if (flag == 1)
                 {
+<<<<<<< HEAD
                     Console.WriteLine("Enter the IP of the server to connect to");
                     ip = Console.ReadLine();
+=======
+                    //Console.WriteLine("Enter the IP of the server to connect to");
+                    //ip = Console.ReadLine();
+>>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
                     client = new TcpDataTransfer("127.0.0.1", port);
                 }
                 string input = Console.ReadLine();
@@ -62,9 +67,15 @@ class Program
                 else
                 {
                     byte[] data = inputAnalysis.Analysis(input);
+<<<<<<< HEAD
                     client.Connect();
 
                     client.SendBytes(data);
+=======
+
+
+                    client.Connect(data);
+>>>>>>> b598ca77e8898fb6ab6e7071e0ec62bd4d9337cc
                     if (flag == 1)
                         flag = 0;
                 }
