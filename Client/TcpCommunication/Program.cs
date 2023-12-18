@@ -22,14 +22,15 @@ class Program
     {
         string ip;
         int port = 3001;
-        int flag = 0;
+        int flag = 0; // Flag to indicate whether the client needs to reconnect.
 
         Console.WriteLine("Welcome to TcpClient.");
         Console.WriteLine("Enter the IP of the server to connect to");
         //ip = Console.ReadLine();
 
-        TcpDataTransfer client = new TcpDataTransfer("192.168.1.112", port);
+        TcpDataTransfer client = new TcpDataTransfer("127.0.0.1", port);
         InputAnalysis inputAnalysis = new InputAnalysis();
+        Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
 
         try
         {
@@ -37,11 +38,10 @@ class Program
             {
                 if (flag == 1)
                 {
-                    //Console.WriteLine("Enter the IP of the server to connect to");
-                    //ip = Console.ReadLine();
-                    client = new TcpDataTransfer("192.168.1.112", port);
+                    Console.WriteLine("Enter the IP of the server to connect to");
+                    ip = Console.ReadLine();
+                    client = new TcpDataTransfer("127.0.0.1", port);
                 }
-                Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
                 string input = Console.ReadLine();
                 if (input == "disconnect!")
                 {
@@ -50,8 +50,6 @@ class Program
                     string reconnectInput = Console.ReadLine();
                     if (reconnectInput == "yes")
                     {
-                        byte[] data = inputAnalysis.Analysis(reconnectInput);
-                        client.SendBytes(data);
                         flag = 1;
                     }
                     else if (reconnectInput == "no") 
@@ -64,11 +62,7 @@ class Program
                 else
                 {
                     byte[] data = inputAnalysis.Analysis(input);
-
-          
-
-                   
-
+                    client.Connect();
 
                     client.SendBytes(data);
                     if (flag == 1)

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;
+﻿using System.Diagnostics;
 using System.Net;
-using System.Net.Mime;
 using System.Net.Sockets;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
 using System.Text;
 using TcpServer;
 
@@ -23,9 +17,6 @@ class Tcp_Server
     private string IpAddress;
     private int Port;
     private int Buffer;
-    private int DataLength;
-    private string LeftData;
-    public bool ServerActive = false;
     private bool ClientConnected = false;
     private bool ListenerActive = false;
     #endregion
@@ -42,9 +33,6 @@ class Tcp_Server
         IpAddress = ipAddress;
         Port = port;
         Buffer = 1024 * 64;
-        DataLength = 0;
-        LeftData = "";
-        ServerActive = true;
     }
 
     /// <summary>
@@ -63,9 +51,17 @@ class Tcp_Server
             while (true)
             {
                 Client = await TcpListener.AcceptTcpClientAsync();
-                ClientConnected = true;
-                Console.WriteLine(i++ + ". client is connected! ");
-                ReceiveBytes();
+                if (Client != null)
+                {
+                    ClientConnected = true;
+                    Console.WriteLine(i++ + ". client is connected! ");
+                    ReceiveBytes();
+                }
+                else
+                {
+                    Console.WriteLine("Failed to accept client connection.");
+                    break;
+                }
             }
         }
         catch (Exception ex)
@@ -81,102 +77,32 @@ class Tcp_Server
     {
         try
         {
+            if (Client != null && Client.Connected)
+            {
+                ClientConnected = false;
+                Client.Close();
+                Client = null;
+            }
 
-            ClientConnected = false;
-            Client.Close();
-            Client = null;
-
-            ListenerActive = false;
-            TcpListener.Stop();
-            TcpListener = null;
-
+            if (TcpListener != null && ListenerActive)
+            {
+                ListenerActive = false;
+                TcpListener.Stop();
+                TcpListener = null;
+            }
         }
         catch (Exception e)
         {
-            Debug.WriteLine("Failed to Stop server! : " + e.ToString());
+            Console.WriteLine("Failed to stop the server: " + e.ToString());
         }
     }
     #endregion
 
 
-    public Message ReadMessage(NetworkStream stream)
-    {
-        byte[] headerName = new byte[5];
-        stream.Read(headerName, 0, headerName.Length);
-
-        Header header = ParseHeader(headerName, stream);
-        if (header != null)
-        {
-
-            int unreadBytes = header.ContentLength;
-            byte[] contentByte = new byte[unreadBytes];
-
-            int readBytes = 0;
-            // byte[] contentByte = ReadContent(stream, header.ContentLength);
-            while (unreadBytes > 0)
-            {
-                Debug.WriteLine("unreadBytes: " + unreadBytes);
-                int len = Math.Min(unreadBytes, Buffer);
-                stream.Read(contentByte, readBytes, len);
-                unreadBytes -= len;
-                readBytes += len;
-                Debug.WriteLine("readBytes: " + readBytes);
-
-
-            }
-            string content = Encoding.UTF8.GetString(contentByte);
-            Debug.WriteLine("content's information: " + content);
-            if (header.DataInfo == DataInfo.File)
-            {
-                HandleReceivedData(contentByte);
-            }
-            return new Message { Header = header, Content = content };
-
-        }
-        return null;
-    }
-
-    private Header ParseHeader(byte[] headerBytes, NetworkStream stream)
-    {
-        DataInfo dataInfo = (DataInfo)headerBytes[0];
-        if (dataInfo == DataInfo.String)
-        {
-            int contentLength = BitConverter.ToInt32(headerBytes, 1);
-            Debug.WriteLine("contentlen: " + contentLength);
-
-            return new Header { DataInfo = dataInfo, ContentLength = contentLength, ContentName = "str" };//sırada okunacak bytelar: contentlen kadar gelen string
-        }
-        else if (dataInfo == DataInfo.File)
-        {
-            //TOTAL HEADER LENGTH
-            int headerLen = BitConverter.ToInt32(headerBytes, 1);
-            Debug.WriteLine("total headerLen: " + headerLen);
-
-
-            // Length of incoming data
-            byte[] contentByte = new byte[4];
-            stream.Read(contentByte, 0, contentByte.Length);
-            int contentLen = BitConverter.ToInt32(contentByte, 0);
-            Debug.WriteLine("incoming data length: " + contentLen);
-
-
-            // FileName = (headerLen - contentLen(4byte) - 5byte)
-            byte[] fileNameBytes = new byte[headerLen - 9];
-            stream.Read(fileNameBytes, 0, fileNameBytes.Length);
-            string fileName = Encoding.UTF8.GetString(fileNameBytes);
-            Debug.WriteLine("Filename: " + fileName);
-
-            return new Header { DataInfo = dataInfo, ContentLength = contentLen, ContentName = fileName, SavePath = "C:\\Users\\ebrar\\Desktop\\aa" + "selammm" };
-        }
-        return null;
-    }
-
     #region Private Functions
 
-
-
     /// <summary>
-    /// Processes the input received from the client.
+    /// The incoming information is first divided into pieces. ProcessMessage() is then sent for processing
     /// </summary>
     private void ReceiveBytes()
     {
@@ -187,10 +113,7 @@ class Tcp_Server
                 Message receivedMessage = ReadMessage(stream);
                 if (receivedMessage != null)
                 {
-                    Debug.WriteLine("Received data type: " + receivedMessage.Header.DataInfo);
-                    Debug.WriteLine("Received content length: " + receivedMessage.Header.ContentLength);
-                    Debug.WriteLine("Received data name: " + receivedMessage.Header.ContentName);
-                    //Debug.WriteLine("Received message: " + receivedMessage.ContentByte);
+                    ProcessMessage(receivedMessage);
                 }
                 else
                 {
@@ -199,54 +122,99 @@ class Tcp_Server
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred while trying to read the incoming value. Message: {ex.Message}, Stack Trace: {ex.StackTrace}");
+                Debug.WriteLine($"An error occurred while trying to read the incoming value. Message: {ex.Message}");
             }
         }
     }
 
-
-    private byte[] ReadContent(NetworkStream stream, int contentLength)
+    /// <summary>
+    /// Reading and analyzing messages
+    /// </summary>
+    /// <param name="stream">The network stream to read from.</param>
+    /// <returns>Returns the information of incoming data or null in case of an error.</returns>
+    private Message ReadMessage(NetworkStream stream)
     {
-        byte[] contentByte = new byte[contentLength];
+        byte[] headerType = new byte[5];
+        stream.Read(headerType, 0, headerType.Length);
 
-         if (contentLength <= Buffer)
-         {
-             Debug.WriteLine("contentbyte Length: " + contentLength);
-             stream.Read(contentByte, 0, contentByte.Length);
-             string readContent = Encoding.UTF8.GetString(contentByte);
-             Debug.WriteLine("read data content: " + readContent);
-         }
-         else
-         {
-             // Send in chunks
-             int unreadBytes = contentLength;
-             int readBytes = 0;
+        Header header = ParseHeader(headerType, stream);
+        if (header != null)
+        {
+            int unreadBytes = header.ContentLength;
+            byte[] contentByte = new byte[unreadBytes];
+            int readBytes = 0;
 
             while (unreadBytes > 0)
             {
-                Debug.WriteLine("unreadBytes: " + unreadBytes);
                 int len = Math.Min(unreadBytes, Buffer);
                 stream.Read(contentByte, readBytes, len);
                 unreadBytes -= len;
                 readBytes += len;
                 Debug.WriteLine("readBytes: " + readBytes);
-
             }
+            return new Message { Header = header, ContentByte = contentByte };
+
         }
-        string content = Encoding.UTF8.GetString(contentByte);
-        Debug.WriteLine("content's information: " + contentByte);
-        return contentByte;
+        return null;
     }
 
-    private void HandleReceivedData( byte[] contentByte)
+    /// <summary>
+    /// Parses the header information from the network stream.
+    /// </summary>
+    /// <param name="headerType">It contains information about whether it is a string header or a file header.</param>
+    /// <param name="stream">The network stream to read additional data if needed.</param>
+    /// <returns>The parsed header or null in case of an error.</returns>
+    private Header ParseHeader(byte[] headerType, NetworkStream stream)
     {
+        DataInfo dataInfo = (DataInfo)headerType[0];
+        if (dataInfo == DataInfo.String)
+        {
+            //1 2 3 4 byte = int ==> headerBytes[5] 
+            int contentLength = BitConverter.ToInt32(headerType, 1);
+            //sırada okunacak bytelar: contentlen kadar gelen string
 
-        string savePath = "C:\\Users\\ebrar\\Desktop\\aa\\" + "ayn.jpg";
-        Debug.WriteLine("Save Path: " + savePath);
-        File.WriteAllBytes(savePath, contentByte);
-        SendResponse(); 
+            return new Header { DataInfo = dataInfo, ContentLength = contentLength, FileName = "str" };
+        }
+        else if (dataInfo == DataInfo.File)
+        {
+            //TOTAL HEADER LENGTH = 4 BYTE
+            int totalHeaderLen = BitConverter.ToInt32(headerType, 1);
+
+            // Length of incoming data --> NEXT 4 BYTE
+            byte[] contentByte = new byte[4];
+            stream.Read(contentByte, 0, contentByte.Length);
+            int contentLen = BitConverter.ToInt32(contentByte, 0);
+            Debug.WriteLine("Received content length: " + contentLen);
+
+            // FileName = (totalHeaderLen - headerType[5] - contentByte(4))
+            byte[] fileNameBytes = new byte[totalHeaderLen - 9];
+            stream.Read(fileNameBytes, 0, fileNameBytes.Length);
+            string fileName = Encoding.UTF8.GetString(fileNameBytes);
+
+            return new Header { DataInfo = dataInfo, ContentLength = contentLen, FileName = "\\" + fileName};
+        }
+        return null;
     }
 
+    /// <summary>
+    /// Processes the received message and performs appropriate actions.
+    /// </summary>
+    /// <param name="receivedMessage">The file message containing information about the file to be saved.</param>
+    private void ProcessMessage(Message receivedMessage)
+    {
+        if (receivedMessage.Header.DataInfo == DataInfo.File)
+        {
+            GetSavePath(receivedMessage);
+            File.WriteAllBytes(receivedMessage.SavePath, receivedMessage.ContentByte);
+        }
+        else
+        {
+            string content = Encoding.UTF8.GetString(receivedMessage.ContentByte);
+            Console.WriteLine("Incoming data: " + content);
+        }
+
+        SendResponse();
+    }
 
     /// <summary>
     /// Sends a response to the client through stream.
@@ -266,5 +234,30 @@ class Tcp_Server
         }
     }
 
+    /// <summary>
+    /// Obtains and validates the save path for file messages.
+    /// </summary>
+    /// <param name="message">The file message containing information about the file to be saved.</param>
+    private void GetSavePath(Message message)
+    {
+        bool validPath = false;
+
+        while (!validPath)
+        {
+            Console.WriteLine("Enter the path where you want to save your file:");
+            string save = Console.ReadLine();
+
+            if (Path.IsPathRooted(save) && Directory.Exists(save))
+            {
+                string savePath = save + message.Header.FileName;
+                message.SavePath = savePath;
+                validPath = true;
+            }
+            else
+            {
+                Console.WriteLine("Please enter a valid path.");
+            }
+        }
+    }
     #endregion
 }

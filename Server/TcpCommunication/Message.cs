@@ -19,7 +19,10 @@ namespace TcpServer
         /// <summary>
         /// Gets or sets the content of the message.
         /// </summary>
-        public string Content { get; set; }
+        public byte[] ContentByte { get; set; }
+
+        public string SavePath { get; set; }
+
     }
 
 

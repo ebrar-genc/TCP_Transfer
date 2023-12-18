@@ -23,31 +23,43 @@ namespace Tcp_Client
         #region Public Function
 
         /// <summary>
-        /// Analyzes whether the input is a string or a file path, calls CreateHeader() to prepare the header,
-        /// combines the header and input value, and returns the final data in the PrepareSendData() function.
+        /// Analyzes the incoming input to determine whether it is a string or a file path.
+        /// Calls appropriate methods to create the header.
+        /// Returns the final byte array prepared for sending over the network.
         /// </summary>
         /// <param name="input">The input string or file path.</param>
-        /// <returns>The final version of the data prepared for sending.</returns>
+        /// <returns>The final byte array for network transmission.</returns>
         public byte[] Analysis(string input)
         {
             byte[] finalBytes = null;
-            //byte[] headerBytes = null;
-
+            byte[] headerBytes = null;
+            byte[] dataBytes = null;
             try
             {
                 if (IsValidPath(input))
-                    finalBytes = CreateFileHeader(input, DataTypes.File);
+                {
+                    dataBytes = File.ReadAllBytes(input);
+                    headerBytes = CreateFileHeader(input, dataBytes.Length);
+                }
                 else
-                    finalBytes = CreateStringHeader(input, DataTypes.String);
-                //finalBytes = PrepareSendData(input, headerBytes);
-                
+                {
+                    headerBytes = CreateStringHeader(input);
+                    dataBytes = Encoding.UTF8.GetBytes(input);
+                }
+
+                finalBytes = PrepareFinalBytes(headerBytes, dataBytes);
+                return finalBytes;
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
+                return null;
             }
-            return finalBytes;
         }
+        #endregion
+
+        #region Private Functions
 
         /// <summary>
         /// Checks whether the provided input is a valid file path or directory.
@@ -56,106 +68,78 @@ namespace Tcp_Client
         /// <returns>Returns true if the input is a valid path; otherwise, returns false.</returns>
         private bool IsValidPath(string input)
         {
-            if (Path.IsPathRooted(input) && (File.Exists(input) || Directory.Exists(input)))
-            {
-                return true;
-            }
-            return false;
-        }
-        #endregion
-
-        #region Private Functions
-
-
-        private byte[] CreateStringHeader(string input, DataTypes dataType)
-        {
-            byte[] headerBytes = null;
-            byte[] contentBytes = null;
-            byte[] finalBytes = null;
-
-
-            Debug.WriteLine("hello string");
-            headerBytes = new byte[5];
-            int inputLen = input.Length;
-            headerBytes[0] = (byte)dataType;
-
-            byte[] contentByte = BitConverter.GetBytes(inputLen);
-            contentByte.CopyTo(headerBytes, 1);//1 2 3 4. bytelara stringin buyukluğu
-
-            contentBytes = Encoding.UTF8.GetBytes(input);
-
-            return CreateFinalBytes(headerBytes, contentBytes);
-
+            return Path.IsPathRooted(input) && (File.Exists(input) || Directory.Exists(input));
         }
 
-        private byte[] CreateFileHeader(string input, DataTypes dataType)
+        /// <summary>
+        /// Creates the header for string data.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <returns>The header for string data.</returns>
+        private byte[]    CreateStringHeader(string input)
         {
-            byte[] headerBytes = null;
-            byte[] contentBytes = null;
+            byte[] headerBytes = new byte[5];
 
+            /// [0] = dataType
+            headerBytes[0] = (byte)DataTypes.String;
 
-            Debug.WriteLine("hello filepath");
-            string inputName = Path.GetFileName(input);
+            byte[] inputByte = BitConverter.GetBytes(input.Length);
+            /// [1,2,3,4] = inputLength
+            inputByte.CopyTo(headerBytes, 1);
 
-            string fileContent = File.ReadAllText(input);
-            int fileContentLen = fileContent.Length;
-            Debug.WriteLine("filecontentbytelen: " + fileContentLen);
+            return headerBytes;
+        }
 
-            contentBytes = Encoding.UTF8.GetBytes(fileContent);
+        /// <summary>
+        /// Creates the header for file data.
+        /// </summary>
+        /// <param name="input">The file path.</param>
+        /// <param name="dataLen">The length of the file content.</param>
+        /// <returns>The header for file data.</returns>
+        private byte[]    CreateFileHeader(string input, int dataLen)
+        {
+            string fileName = Path.GetFileName(input);
+            Debug.WriteLine("filecontentbytelen: " + dataLen);
 
-            headerBytes = new byte[inputName.Length + 9];
-            headerBytes[0] = (byte)dataType;
+            byte[] headerBytes = new byte[fileName.Length + 9];
 
+            /// [0] = dataType
+            headerBytes[0] = (byte)DataTypes.File;
+
+            /// [1,2,3,4] = headerLen
             byte[] headerLen = BitConverter.GetBytes(headerBytes.Length);
-            headerLen.CopyTo(headerBytes, 1); //1 2 3 4. byte'lara header uzunluğu yazacak
+            headerLen.CopyTo(headerBytes, 1);
 
-            byte[] fileContentBytes = BitConverter.GetBytes(fileContentLen);
-            fileContentBytes.CopyTo(headerBytes, 5); //5 6 7 8'econtent uzunluğu
+            /// [5,6,7,8] = fileContent
+            byte[] fileContentBytes = BitConverter.GetBytes(dataLen);
+            fileContentBytes.CopyTo(headerBytes, 5);
 
-            byte[] nameBytes = Encoding.UTF8.GetBytes(inputName);
-            nameBytes.CopyTo(headerBytes, 9); //9 ve gerisine dosya ismi
+            /// [9,.......] = fileName
+            byte[] nameBytes = Encoding.UTF8.GetBytes(fileName);
+            nameBytes.CopyTo(headerBytes, 9);
 
-            return CreateFinalBytes(headerBytes, contentBytes);
+            return headerBytes;
         }
 
-        private byte[] CreateFinalBytes(byte[] headerBytes, byte[] contentBytes)
+        /// <summary>
+        /// Prepares the final byte array by combining header and data.
+        /// </summary>
+        /// <param name="headerBytes">The header bytes.</param>
+        /// <param name="dataBytes">The incoming data bytes.</param>
+        /// <returns>The final byte array.</returns>
+        private byte[] PrepareFinalBytes(byte[] headerBytes, byte[] dataBytes)
         {
-            byte[] finalBytes = null;
+            byte[] finalBytes = new byte[headerBytes.Length + dataBytes.Length];
 
-            finalBytes = new byte[contentBytes.Length + headerBytes.Length];
             headerBytes.CopyTo(finalBytes, 0);
-            contentBytes.CopyTo(finalBytes, headerBytes.Length);
-            Debug.WriteLine("content stringg: " + Encoding.UTF8.GetString(contentBytes));
+            dataBytes.CopyTo(finalBytes, headerBytes.Length);
 
-            Debug.WriteLine("headerBytes length: " + headerBytes.Length);
-            Debug.WriteLine("finalBytes content: " + BitConverter.ToString(finalBytes));
+            Debug.WriteLine("HeaderBytes length: " + headerBytes.Length);
 
             return finalBytes;
         }
         #endregion
-
     }
 }
 
 
-
-/*
- *  /// <summary>
-        /// Combine header and input
-        /// </summary>
-        /// <param name="input">The input string or file path.</param>
-        /// <param name="headerBytes">The byte array representing the header.</param>
-        /// <returns>The final byte array prepared for transmission.</returns>
-        private byte[] PrepareSendData(string input, byte[] headerBytes)
-        {
-            byte[] inputBytes = null;
-            byte[] finalBytes = null;
-
-            inputBytes = Encoding.UTF8.GetBytes(input);
-            finalBytes = new byte[inputBytes.Length + headerBytes.Length];
-            headerBytes.CopyTo(finalBytes, 0);
-            inputBytes.CopyTo(finalBytes, headerBytes.Length);
-            Debug.WriteLine("headerBytes length: " + headerBytes.Length);
-            return finalBytes;
-        }
-*/
