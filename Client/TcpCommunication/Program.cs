@@ -1,15 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Net.Sockets;
-using System.Text;
-using System.Net;
-using static System.Formats.Asn1.AsnWriter;
-using System.Security.AccessControl;
-using System.Security.Permissions;
-using System.Security;
-using Tcp_Client;
-using System.Diagnostics;
-using System.Net.Http;
+﻿using Tcp_Client;
+
 
 
 class Program
@@ -18,43 +8,56 @@ class Program
 
     /// <summary>
     /// Entry point for the TCP client application.
+    /// </summary>
     static void Main()
     {
-        string serverIp = null;
+        string ip;
         int port = 3001;
-
-        Console.WriteLine("Enter the IP of the server to connect to: ");
-        serverIp = Console.ReadLine();
-        TcpDataTransfer client = new TcpDataTransfer(serverIp, port);
-        InputAnalysis inputAnalysis = new InputAnalysis();
+        int flag = 0;
 
         Console.WriteLine("Welcome to TcpClient.");
-        Console.WriteLine("Enter the information you want to transmit to the server (or 'disconnect!' to exit..): ");
+        Console.WriteLine("Enter the IP of the server to connect to");
+        ip = Console.ReadLine();
+
+        TcpDataTransfer client = new TcpDataTransfer(ip, port);
+        InputAnalysis inputAnalysis = new InputAnalysis();
 
         try
         {
+            Console.WriteLine("Enter the information you want to transmit to the server or enter 'disconnect!' to exit.");
             while (true)
             {
-                string userInput = Console.ReadLine();
-
-                if (userInput == "disconnect!")
+                if (flag == 1)
+                {
+                    Console.WriteLine("Enter the IP of the server to connect to");
+                    ip = Console.ReadLine();
+                    client = new TcpDataTransfer(ip, port);
+                }
+                string input = Console.ReadLine();
+                if (input == "disconnect!")
                 {
                     client.Disconnect();
-                    Console.WriteLine("Do you want to connect again? (yes/no)");
+                    Console.WriteLine("Disconnected. Do you want to connect again? (yes/no)");
                     string reconnectInput = Console.ReadLine();
-
-                    if (reconnectInput == "no")
+                    if (reconnectInput == "yes")
+                    {
+                        byte[] data = inputAnalysis.Analysis(reconnectInput);
+                        client.Connect(data);
+                        flag = 1;
+                    }
+                    else if (reconnectInput == "no")
                     {
                         Console.WriteLine("Client was closed..");
                         break;
                     }
-                    else if (reconnectInput == "yes")
-                        serverIp = null;
+
                 }
                 else
                 {
-                    byte[] data = inputAnalysis.Analysis(userInput);
-                    client.SendBytes(data);
+                    byte[] data = inputAnalysis.Analysis(input);
+                    client.Connect(data);
+                    if (flag == 1)
+                        flag = 0;
                 }
             }
         }
@@ -62,13 +65,7 @@ class Program
         {
             Console.WriteLine("Main Error: " + ex.Message);
         }
-        finally
-        {
-            client.Disconnect();
-        }
+        Console.ReadLine();
     }
-
-
-
     #endregion
 }

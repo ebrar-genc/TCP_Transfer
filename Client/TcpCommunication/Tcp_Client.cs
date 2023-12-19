@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+
 
 /// <summary>
 /// Represents a TCP client for communication with a server.
@@ -11,10 +13,14 @@ class TcpDataTransfer
     #region Parameters;
 
     private TcpClient Client;
-    public bool ClientActive = false;
     private string IpAddress;
     private int Port;
+    public bool ClientActive = false;
 
+    /// <summary>
+    /// The buffer size for data transmission.
+    /// </summary>
+    private int Buffer;
     #endregion
 
     #region Public
@@ -28,43 +34,25 @@ class TcpDataTransfer
     {
         IpAddress = ipAddress;
         Port = port;
-        try
-        {
-            Client = new TcpClient();
-            Console.WriteLine("Connected to server");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine("An error occurred while creating TcpClient: " + ex.Message);
-        }
-        finally
-        {
-            Connect();
-        }
-        
+        Buffer = 1024 * 64;
     }
 
     /// <summary>
     /// Connects to the server.
     /// </summary>
-    public void Connect()
+    public void Connect(byte[] data)
     {
         try
         {
+            Client = new TcpClient();
             Client.Connect(IpAddress, Port);
             ClientActive = true;
-            if (Client.Connected)
-            {
-                Console.WriteLine("hello");
-            }
-            else
-                Console.WriteLine("mlsf");
-
         }
         catch (Exception ex)
         {
             Debug.WriteLine("Error connecting to the server: " + ex.Message);
         }
+        SendBytes(data);
     }
 
     /// <summary>
@@ -76,8 +64,7 @@ class TcpDataTransfer
         {
             if (Client != null && Client.Connected)
             {
-                NetworkStream stream = Client.GetStream();
-                stream.Close(); // Close the stream first
+                Client.GetStream().Close();
                 Client.Close();
                 Console.WriteLine("Disconnected from the server.");
             }
@@ -89,7 +76,6 @@ class TcpDataTransfer
             Console.WriteLine("An error occurred while disconnecting: " + ex.Message);
         }
     }
-
     #endregion
 
     #region Public Functions
@@ -123,38 +109,11 @@ class TcpDataTransfer
         {
             Console.WriteLine("An error occurred while sending data: " + ex.Message);
         }
-
-        /*if (Client != null && Client.Connected)
-        {
-            using NetworkStream stream = Client.GetStream();
-            {
-                /// The buffer size for data transmission.
-                int buffer = 1024 * 64;
-                // Send in chunks
-                int unsentBytes = data.Length;
-                int sentBytes = 0;
-
-                while (unsentBytes > 0)
-                {
-                    int len = Math.Min(unsentBytes, buffer);
-                    stream.Write(data, sentBytes, len);
-                    unsentBytes -= len;
-                    sentBytes += len;
-                }
-                ReadServerResponse();
-            }
-        }
-        else
-        {
-            Console.WriteLine("Client is not connected.");
-        }
-    }*/
-        
     }
     #endregion
 
-
     #region Private Functions
+
     /// <summary>
     /// Reads the server's response.
     /// </summary>
@@ -164,7 +123,7 @@ class TcpDataTransfer
         {
             using NetworkStream stream = Client.GetStream();
             {
-                byte[] responseByte = new byte[10];
+                byte[] responseByte = new byte[45];
                 int bytesRead = stream.Read(responseByte, 0, responseByte.Length);
                 string message = Encoding.UTF8.GetString(responseByte, 0, bytesRead);
                 Console.WriteLine(message);
@@ -177,5 +136,4 @@ class TcpDataTransfer
     }
     #endregion
 }
-
 

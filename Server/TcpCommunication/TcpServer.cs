@@ -47,14 +47,12 @@ class Tcp_Server
             ListenerActive = true;
             Console.WriteLine("Server is listening on " + IpAddress + ":" + Port);
 
-            int i = 1;
             while (true)
             {
                 Client = await TcpListener.AcceptTcpClientAsync();
                 if (Client != null)
                 {
                     ClientConnected = true;
-                    Console.WriteLine(i++ + ". client is connected! ");
                     ReceiveBytes();
                 }
                 else
@@ -206,6 +204,7 @@ class Tcp_Server
         {
             GetSavePath(receivedMessage);
             File.WriteAllBytes(receivedMessage.SavePath, receivedMessage.ContentByte);
+            Console.WriteLine("The file was saved successfully");
         }
         else
         {
